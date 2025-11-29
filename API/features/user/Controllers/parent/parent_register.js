@@ -16,9 +16,9 @@ exports.register = async(req,res)=>{
         // check family code if not exist generateUniqueFamilyCode()
         if (family_code == null) {
             family_code = await generateUniqueFamilyCode();
-        } else {
+        } 
             let family =  await checkFamilyCode(family_code);
-        }
+        
 
         // check email
         const existingParent = await parentModel.findOne({ email: email.toLowerCase().trim() });
@@ -50,12 +50,12 @@ exports.register = async(req,res)=>{
         const hashed_pass = await bcrypt.hash(password,10);
 
         // create parent
-        const newparent = await parentModel.create({
+          await parentModel.create({
             user_id: newuser._id,
             email: email.toLowerCase(),
             password: hashed_pass,
             phone_number: phone_number
-        });
+          });
 
         // response 
         return res.status(201).json({
@@ -63,7 +63,7 @@ exports.register = async(req,res)=>{
 
     } catch (error) {
         console.log(error);
-        return res.status(500).json({ massege: 'something went wrong' });
+        return res.status(500).json({ massege:error });
     }
 };
 

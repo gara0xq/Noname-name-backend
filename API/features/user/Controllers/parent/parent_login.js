@@ -1,6 +1,8 @@
 const bcrypt = require('bcryptjs');
 const parentModel = require('../../models/parent_model');
-
+const userModel = require('../../models/user_model');
+const jwt = require('jsonwebtoken');
+const permissionsModel = require('../../models/permissions_model');
 
 
 exports.login= async (req,res) =>{
@@ -12,11 +14,31 @@ exports.login= async (req,res) =>{
         }
 
         const existingParent = await parentModel.findOne({ email: email.toLowerCase().trim() });
-                if (existingParent) {
-                    return res.status(409).json({ massege : 'Email already in use' });
+
+                if (!existingParent) {
+
+                    return res.status(409).json({ massege : 'Email Not found' });
                 }
-        const hashed_pass = await bcrypt.hash(password,10);
-        const check_pass = await parentModel.find(email)
+
+        
+
+        const match = await bcrypt.compare(password,existingParent.password)
+        if (!match) {
+            return res.status(401).json({ message: "Invalid email or password" });
+        }
+        const existinguser = await userModel.findOne(existingParent.user_id)
+
+        const existpermission = await permissionsModel.findOne(existinguser.permissions_id)
+
+        const token = jwt.sign(
+            {
+                userId:existingParent.user_id,
+                role: existpermission.title
+            }, process.env.ACCESS_TOKEN_SECRET
+        );
+        return res.status(201).json({
+            token:token
+        });
         
 
 
