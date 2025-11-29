@@ -8,7 +8,7 @@ exports.login= async (req,res) =>{
 
         let {email,password} = req.body;
         if ( !email || !password) {
-          return res.status(400).json({ message: "name, email, password are required" });
+          return res.status(400).json({ message: " email, password are required" });
         }
 
         const existingParent = await parentModel.findOne({ email: email.toLowerCase().trim() });
@@ -16,7 +16,7 @@ exports.login= async (req,res) =>{
                     return res.status(409).json({ massege : 'Email already in use' });
                 }
         const hashed_pass = await bcrypt.hash(password,10);
-        const check_pass = await pa
+        const check_pass = await parentModel.find(email)
         
 
 

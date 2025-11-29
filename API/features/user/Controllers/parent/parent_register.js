@@ -17,7 +17,7 @@ exports.register = async(req,res)=>{
         if (family_code == null) {
             family_code = await generateUniqueFamilyCode();
         } else {
-            await checkFamilyCode(family_code);
+            let family =  await checkFamilyCode(family_code);
         }
 
         // check email
@@ -27,7 +27,6 @@ exports.register = async(req,res)=>{
         }
 
         // find family OR create one  
-        let family = await familyModel.findOne({ code: family_code });
         if (!family) {
             family = await familyModel.create({ code: family_code });
         }
@@ -58,7 +57,7 @@ exports.register = async(req,res)=>{
             phone_number: phone_number
         });
 
-        // response *** FIXED VARIABLE NAMES ***
+        // response 
         return res.status(201).json({
             message: "Parent registered successfully",});
 
@@ -78,7 +77,7 @@ async function generateUniqueFamilyCode(maxAttempts = 20) {
     const exists = await familyModel.findOne({ code }); 
     if (!exists) return code;
   }
-  throw new Error('Max attempts reached while generating family code');
+  return false
 }
 
 async function checkFamilyCode(code) {
@@ -86,9 +85,9 @@ async function checkFamilyCode(code) {
       const family = await familyModel.findOne({ code: code });
 
       if (!family) {
-        throw new Error('there is no code like this');
+        return null
       }
 
-      return true;
+      return family;
     }
 }
