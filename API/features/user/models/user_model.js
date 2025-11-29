@@ -12,13 +12,15 @@ const userSchema = new mongoose.Schema(
             required:true,
             trim:true,
         },
-        permissions:[
+        permissions_id:
             {
+                
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "",
+                ref: "permissions",
                 required:true
-            }
-        ],
+            },
+
+        
         created_at:{
             type: Date,
             default: Date.now
