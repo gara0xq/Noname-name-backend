@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const parentModel = require('../../models/parent_model');
 const userModel = require('../../models/user_model');
+const familyModel = require('../../models/family_model');
 
 exports.getCurrent = async(req,res)=>{
     try {
@@ -21,11 +22,15 @@ exports.getCurrent = async(req,res)=>{
 
         existingParent = await parentModel.findOne({user_id:user_id})
         existinguser = await userModel.findOne({_id:user_id})
+        existingfamily = await familyModel.findOne({_id:existinguser.family_id})
+        
 
         return res.status(200).json({
             email : existingParent.email,
             phone_number: existingParent.phone_number,
-            name:existinguser.name
+            name:existinguser.name,
+            family_code:existingfamily.code
+
         });
     
         

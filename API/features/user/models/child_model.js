@@ -9,7 +9,14 @@ const childSchema = new mongoose.Schema(
       required: true,
       unique: true
     },
-    code: { type: String, trim: true, default: "" },
+    code: { type: String, trim: true,required: true },
+    gender:{
+      type: String,
+      trim: true,
+      required: true,
+
+
+    },
     points: { type: Number, default: 0 }
   },
   { timestamps: false, versionKey: false }
