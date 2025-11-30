@@ -3,7 +3,7 @@ const express = require('express')
 if (process.env.NODE_ENV !== "production") {
   require("dotenv").config();
 }
-const connectDB = require('./API/config/db')
+const connectDB = require('./API/Config/db')
 const userRoutes = require('./API/features/user/routes/user_route');
 const app = express()
 
