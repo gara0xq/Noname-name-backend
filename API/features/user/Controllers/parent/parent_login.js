@@ -33,6 +33,8 @@ exports.login= async (req,res) =>{
         const token = jwt.sign(
             {
                 userId:existingParent.user_id,
+                familyId:existinguser.family_id,
+                parentId:existingParent._id ,
                 role: existpermission.title
             }, process.env.ACCESS_TOKEN_SECRET
         );

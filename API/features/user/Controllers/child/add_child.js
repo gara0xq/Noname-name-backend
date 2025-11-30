@@ -16,39 +16,53 @@ exports.addChild = async (req, res) => {
         resolve(user);
       });
     });
-    const parentUserId = decoded.userId;
 
-    let { name, family_code, title, gender } = req.body;
-    if (!name || !gender || !family_code) {
+
+    const parentUserId = decoded.userId;     
+    const familyId = decoded.familyId;       
+    const parentId = decoded.parentId;       
+    const role = decoded.role;               
+
+    let { name, gender, title } = req.body;
+    if (!name || !gender) {
       return res.status(400).json({
-        message: 'name, gender and family_code are required',
+        message: 'name and gender are required',
       });
     }
+
     name = String(name).trim();
     gender = String(gender).trim().toLowerCase();
     if (!['male', 'female'].includes(gender)) {
       return res.status(400).json({ message: 'gender must be male, female ' });
     }
 
-    const family = await checkFamilyCode(family_code);
+
+    const family = await familyModel.findById(familyId);
     if (!family) {
-      return res.status(401).json({ message: 'Invalid family code' });
+      return res.status(403).json({ message: 'Invalid family (from token)' });
     }
+
 
     const parentUser = await userModel.findById(parentUserId);
-    if (!parentUser) return res.status(403).json({ message: 'Parent not found' });
+    if (!parentUser)
+      return res.status(403).json({ message: 'Parent user not found' });
+
     if (String(parentUser.family_id) !== String(family._id)) {
-      return res.status(403).json({ message: 'You are not allowed to add a child to this family' });
+      return res.status(403).json({
+        message: 'You are not allowed to add a child to this family',
+      });
     }
 
-    const childrenInFamily = await userModel.find({ family_id: family._id });
 
-    const existingSameName = childrenInFamily.find(
-      u => u.name.toLowerCase() === name.toLowerCase()
-    );
+    const existingSameName = await userModel.findOne({
+      family_id: family._id,
+      name: { $regex: `^${name}$`, $options: 'i' },
+    });
 
     if (existingSameName) {
-      return res.status(409).json({ message: 'A user with this name already exists in the family' });
+      return res.status(409).json({
+        message: 'A user with this name already exists in the family',
+      });
     }
 
     const permissionTitle = title ? String(title).trim() : 'child';
@@ -57,19 +71,18 @@ exports.addChild = async (req, res) => {
       permission = await permissionsModel.create({ title: permissionTitle });
     }
 
-    let newUser = await userModel.findOne({ name: name });
-    if (!newUser) {
-      newUser = await userModel.create({
-        name,
-        family_id: family._id,
-        permissions_id: [permission._id],
-        created_at: new Date(),
-      });
-    } else return;
+    const newUser = await userModel.create({
+      name,
+      family_id: family._id,
+      permissions_id: [permission._id],
+      created_at: new Date(),
+    });
 
     const childCode = await generateUniqueChildCode();
     if (!childCode) {
-      return res.status(500).json({ message: 'Could not generate unique child code, try again' });
+      return res.status(500).json({
+        message: 'Could not generate unique child code, try again',
+      });
     }
 
     const child = await childModel.create({
@@ -91,7 +104,9 @@ exports.addChild = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: error.message || 'Internal server error' });
+    return res.status(500).json({
+      message: error.message || 'Internal server error',
+    });
   }
 };
 
@@ -102,9 +117,4 @@ async function generateUniqueChildCode(maxAttempts = 20) {
     if (!exists) return code;
   }
   return null;
-}
-
-async function checkFamilyCode(code) {
-  if (!code) return null;
-  return familyModel.findOne({ code });
 }
