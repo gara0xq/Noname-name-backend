@@ -9,7 +9,7 @@ const app = express()
 
 app.use(express.json())
 connectDB()
-app.use('/', (res, req)=> res.send("Welcome Here!"))
+app.get('/', (res, req)=> res.send("Welcome Here!"))
 app.use('/user', userRoutes);
 
 app.listen(process.env.port , ()=>console.log("server running"))
