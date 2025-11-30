@@ -16,7 +16,7 @@ exports.addChild = async (req, res) => {
         resolve(user);
       });
     });
-
+    
 
     const parentUserId = decoded.userId;     
     const familyId = decoded.familyId;       
@@ -29,6 +29,14 @@ exports.addChild = async (req, res) => {
         message: 'name and gender are required',
       });
     }
+
+    const parentUserDoc = await userModel.findById(parentUserId); 
+    if (parentUserDoc.name && parentUserDoc.name.trim().toLowerCase() === name.toLowerCase()) {
+      return res.status(409).json({ message: "child name can't be the same as parent name" });
+}
+    
+
+
 
     name = String(name).trim();
     gender = String(gender).trim().toLowerCase();
