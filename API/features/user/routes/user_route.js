@@ -7,12 +7,15 @@ const getUser = require('../Controllers/parent/get_current');
 const addChild = require('../Controllers/child/add_child')
 const getChildren = require('../Controllers/child/get_children')
 const getChild = require('../Controllers/child/get_child')
+const loginChildController = require('../Controllers/child/child_Login')
 
 router.post('/parent/login', loginController.login);
 router.post('/parent/register', signUpController.register);
 router.post('/child/addChild',addChild.addChild)
+router.post('/child/login',loginChildController.login)
 router.get('/parent/get_current', getUser.getCurrent);
 router.get('/child/getChildren',getChildren.get_children)
 router.get('/child/getChild',getChild.get_children)
+
 
 module.exports = router;
