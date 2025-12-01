@@ -34,12 +34,21 @@ exports.get_children = async (req, res) => {
       });
     }
 
-   
-    const result = await fetchAllChildren(familyId,res);
+    let { code } = req.body;
+     if (!code) {
+      return res.status(400).json({
+        message: 'code are required',
+      });
 
-
+    }
+    if (typeof code !== 'string' || !code.trim()) {
+    return res.status(400).json({ message: 'code is required' });
+  }
+  code = code.trim();
+    const result = await fetchChildren(familyId,res,code)
     return res.status(200).json(result);
-  } catch (error) {
+  }catch(error){
+
     console.error(error);
     if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
       return res.status(401).json({ message: 'Invalid or expired token' });
@@ -47,10 +56,12 @@ exports.get_children = async (req, res) => {
     return res.status(500).json({
       message: error.message || 'Internal server error',
     });
+  
   }
-};
 
-async function fetchAllChildren(familyId,res, permissionTitle = 'child') {
+}
+
+async function fetchChildren(familyId,res,code,permissionTitle='child') {
   const permission = await permissionsModel.findOne({ title: permissionTitle });
   if (!permission) {
     return res.status(409).json({ message: 'there is no children' }); 
@@ -58,8 +69,9 @@ async function fetchAllChildren(familyId,res, permissionTitle = 'child') {
 
   const users = await userModel.find({
     family_id: familyId,
-    permissions_id: permission._id
-  }).select('_id');
+    permissions_id: permission._id,
+    
+  }).select('_id').lean();
 
   if (!users.length) {
     return res.status(409).json({ message: 'there is no children' }); 
@@ -68,25 +80,21 @@ async function fetchAllChildren(familyId,res, permissionTitle = 'child') {
   const userIds = users.map(u => u._id);
 
   const children = await childModel
-    .find({ user_id: { $in: userIds } })
+    .find({ user_id: { $in: userIds } ,code:code})
     .populate('user_id', 'name')
     .select('code gender points user_id');
 
   if (!children.length) {
-    return {
-      status: false,
-      message: 'there is no children',
-      children: []
-    };
+    return res.status(409).json({ message: 'there is no child' }); 
   }
 
   return {
-    message: 'children fetched successfully',
-    children: children.map(c => ({
-      name: c.user_id ? c.user_id.name : null,
-      code: c.code,
-      gender: c.gender,
-      points: c.points ?? 0
-    }))
+    message: 'child fetched successfully',
+    child:  {
+      name: children[0].user_id ? children[0].user_id.name : null,
+      code: children[0].code,
+      gender: children[0].gender,
+      points: children[0].points ?? 0
+    }
   };
 }
