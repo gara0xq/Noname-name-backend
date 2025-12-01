@@ -35,13 +35,13 @@ exports.get_children = async (req, res) => {
     }
 
    
-    const result = await fetchAllChildren(familyId);
+    const result = await fetchAllChildren(familyId, res);
+    // if()
 
 
     return res.status(200).json(result);
   } catch (error) {
     console.error(error);
-    // map jwt errors
     if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
       return res.status(401).json({ message: 'Invalid or expired token' });
     }
@@ -51,29 +51,25 @@ exports.get_children = async (req, res) => {
   }
 };
 
-async function fetchAllChildren(familyId, permissionTitle = 'child') {
+async function fetchAllChildren(familyId, res ,permissionTitle = 'child') {
   const permission = await permissionsModel.findOne({ title: permissionTitle });
   if (!permission) {
-    return {
-      status: false,
+    return res.status(409).json({
       message: 'there is no children',
-      children: []
-    };
+    });
   }
 
   const users = await userModel.find({
     family_id: familyId,
     permissions_id: permission._id
-  }).select('_id');
+  });
 
   if (!users.length) {
-    return {
-      status: false,
+    return res.status(409).json({
       message: 'there is no children',
-      children: []
-    };
+    });
   }
-
+  return users;
   const userIds = users.map(u => u._id);
 
   const children = await childModel
@@ -90,7 +86,6 @@ async function fetchAllChildren(familyId, permissionTitle = 'child') {
   }
 
   return {
-    status: true,
     message: 'children fetched successfully',
     children: children.map(c => ({
       name: c.user_id ? c.user_id.name : null,
