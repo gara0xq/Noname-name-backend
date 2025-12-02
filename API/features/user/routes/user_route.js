@@ -11,7 +11,8 @@ const loginChildController = require('../Controllers/child/child_Login')
 const addTaskcontroller = require('../Controllers/parent/add_tasks')
 const getTasksController = require('../Controllers/parent/get_tasks')
 const updateParentPassController = require('../Controllers/parent/update_password')
-const getTaskController = require('../Controllers/parent/getCurrentTask')
+const getTaskController = require('../Controllers/parent/get_current_task')
+const getChildTasksController = require('../Controllers/parent/get_child_tasks')
 
 
 
@@ -25,6 +26,7 @@ router.get('/child/getChildren',getChildren.get_children)
 router.get('/child/getChild',getChild.get_children)
 router.get('/parent/getTasks',getTasksController.get_tasks)
 router.get('/parent/getCurrentTask',getTaskController.get_current_task)
+router.get('/parent/getChildTasks',getChildTasksController.get_child_task)
 router.put('/parent/updateUserPass',updateParentPassController.updatePass)
 
 
