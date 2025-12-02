@@ -29,7 +29,7 @@ exports.addTask = async (req, res) => {
     let {title,description,points,code,punishment,expire_date } = req.body;
     if (!title || !description || !points ||!code ||!punishment) {
       return res.status(400).json({
-        message: 'name and gender are required',
+        message: 'title and description and points and code and punishment  are required',
       });
     }
 
@@ -115,11 +115,4 @@ exports.addTask = async (req, res) => {
   }
 };
 
-async function generateUniqueChildCode(maxAttempts = 20) {
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const exists = await childModel.findOne({ code });
-    if (!exists) return code;
-  }
-  return null;
-}
+
