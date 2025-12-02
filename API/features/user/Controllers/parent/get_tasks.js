@@ -65,7 +65,7 @@ async function fetchAlltasks(parentId ,res) {
   }).select('_id');
 
   if (!tasks.length) {
-    return res.status(409).json({ message: 'there is no children' }); 
+    return res.status(409).json({ message: 'there is no tasks' }); 
   }
 
   const taskIds = tasks.map(u => u._id);
@@ -76,15 +76,16 @@ async function fetchAlltasks(parentId ,res) {
   if (!taskss.length) {
     return {
       status: false,
-      message: 'there is no children',
+      message: 'there is no tasks',
       children: []
     };
   }
   
 
   const mappedPromises = taskss.map(async t => {
-    const name = await getNameById(t.child_id); // await here
+    const name = await getNameById(t.child_id); 
     return {
+      id: t._id,
       title: t.title,
       points: t.points,
       status: t.status,

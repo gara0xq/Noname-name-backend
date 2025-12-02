@@ -10,7 +10,8 @@ const getChild = require('../Controllers/child/get_child')
 const loginChildController = require('../Controllers/child/child_Login')
 const addTaskcontroller = require('../Controllers/parent/add_tasks')
 const getTasksController = require('../Controllers/parent/get_tasks')
-const updateParentPass = require('../Controllers/parent/update_password')
+const updateParentPassController = require('../Controllers/parent/update_password')
+const getTaskController = require('../Controllers/parent/getCurrentTask')
 
 
 
@@ -23,7 +24,8 @@ router.get('/parent/get_current', getUser.getCurrent);
 router.get('/child/getChildren',getChildren.get_children)
 router.get('/child/getChild',getChild.get_children)
 router.get('/parent/getTasks',getTasksController.get_tasks)
-router.put('/parent/updateUserPass',updateParentPass.updatePass)
+router.get('/parent/getCurrentTask',getTaskController.get_current_task)
+router.put('/parent/updateUserPass',updateParentPassController.updatePass)
 
 
 module.exports = router;
