@@ -1,7 +1,7 @@
-const jwt = require('jsonwebtoken');
-const userModel = require('../../models/user_model');
-const familyModel = require('../../models/family_model');
-const parent_model = require('../../models/parent_model');
+const verifyJwt = require('../../../../../config/jwt_token_for_parent')
+const userModel = require('../../../models/user_model');
+const familyModel = require('../../../models/family_model');
+const parent_model = require('../../../models/parent_model');
 const bcrypt = require('bcryptjs');
 
 exports.updatePass = async (req, res) => {
@@ -11,12 +11,7 @@ exports.updatePass = async (req, res) => {
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) return res.sendStatus(401);
 
-    const decoded = await new Promise((resolve, reject) => {
-      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-        if (err) return reject(err);
-        resolve(user);
-      });
-    });
+    const decoded = await verifyJwt.verifyJwt(token)
 
     const parentUserId = decoded.userId;
     const familyId = decoded.familyId;

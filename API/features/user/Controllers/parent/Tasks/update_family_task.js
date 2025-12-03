@@ -1,9 +1,9 @@
-const jwt = require('jsonwebtoken');
-const userModel = require('../../models/user_model');
-const familyModel = require('../../models/family_model');
-const parent_model = require('../../models/parent_model');
-const childModel = require('../../models/child_model');
-const tasks_model = require('../../models/tasks_model');
+const verifyJwt = require('../../../../../config/jwt_token_for_parent')
+const userModel = require('../../../models/user_model');
+const familyModel = require('../../../models/family_model');
+const parent_model = require('../../../models/parent_model');
+const childModel = require('../../../models/child_model');
+const tasks_model = require('../../../models/tasks_model');
 
 exports.updateFamilyTask = async (req, res) => {
   try {
@@ -11,15 +11,11 @@ exports.updateFamilyTask = async (req, res) => {
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) return res.status(401).json({ message: 'Unauthorized' });
 
-    const decoded = await new Promise((resolve, reject) => {
-      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-        if (err) return reject(err);
-        resolve(user);
-      });
-    });
+    const decoded = await verifyJwt.verifyJwt(token)
 
     const parentUserId = decoded.userId;
     const familyId = decoded.familyId;
+
     const parentId = decoded.parentId;
 
     const family = await familyModel.findById(familyId);
@@ -28,7 +24,7 @@ exports.updateFamilyTask = async (req, res) => {
     const parentUser = await userModel.findById(parentUserId);
     if (!parentUser) return res.status(403).json({ message: 'Parent user not found' });
 
-    if (String(parentUser.family_id) !== String(family._1? family._id : family._id)) {
+    if (String(parentUser.family_id) !== String(family._id? family._id : family._id)) {
       return res.status(403).json({ message: 'You are not allowed to perform this action for this family' });
     }
 

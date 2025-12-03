@@ -1,9 +1,8 @@
-const jwt = require('jsonwebtoken');
-const userModel = require('../../models/user_model');
-const permissionsModel = require('../../models/permissions_model');
-const familyModel = require('../../models/family_model');
-const childModel = require('../../models/child_model');
-const taskModel = require('../../models/tasks_model')
+const verifyJwt = require('../../../../../config/jwt_token_for_parent')
+const userModel = require('../../../models/user_model');
+const familyModel = require('../../../models/family_model');
+const childModel = require('../../../models/child_model');
+const taskModel = require('../../../models/tasks_model')
 const moment = require('moment-timezone')
 
 
@@ -13,18 +12,11 @@ exports.addTask = async (req, res) => {
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) return res.sendStatus(401);
 
-    const decoded = await new Promise((resolve, reject) => {
-      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-        if (err) return reject(err);
-        resolve(user);
-      });
-    });
-    
+    const decoded = await verifyJwt.verifyJwt(token)
 
     const parentUserId = decoded.userId;     
     const familyId = decoded.familyId;       
-    const parentId = decoded.parentId;       
-    const role = decoded.role;               
+    const parentId = decoded.parentId;                     
 
     let {title,description,points,code,punishment,expire_date } = req.body;
     if (!title || !description || !points ||!code ||!punishment) {
@@ -70,6 +62,14 @@ exports.addTask = async (req, res) => {
     const currentChild = await childModel.findOne({code:code})
     if(!currentChild) return res.status(404).json({
         message: 'child not found',
+      });
+
+    const currentChildUser = await userModel.findOne({
+      family_id : familyId,
+      _id:currentChild.user_id
+    })
+    if(!currentChildUser) return res.status(404).json({
+        message: 'code is incorrect',
       });
       const creatTask = await taskModel.create(
         {

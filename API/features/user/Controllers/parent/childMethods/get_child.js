@@ -1,22 +1,20 @@
-const jwt = require('jsonwebtoken');
-const userModel = require('../../models/user_model');
-const permissionsModel = require('../../models/permissions_model');
-const familyModel = require('../../models/family_model');
-const childModel = require('../../models/child_model');
+
+const userModel = require('../../../models/user_model');
+const permissionsModel = require('../../../models/permissions_model');
+const familyModel = require('../../../models/family_model');
+const childModel = require('../../../models/child_model');
+const verifyJwt = require('../../../../../config/jwt_token_for_parent')
 
 exports.get_children = async (req, res) => {
   try {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.sendStatus(401);
-
-    const decoded = await new Promise((resolve, reject) => {
-      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-        if (err) return reject(err);
-        resolve(user);
-      });
+    if (!token) return res.status(401).json({
+      message:'token not found'
     });
 
+    const decoded = await verifyJwt.verifyJwt(token)
+    
     const parentUserId = decoded.userId;
     const familyId = decoded.familyId;
 
@@ -64,9 +62,10 @@ exports.get_children = async (req, res) => {
 async function fetchChildren(familyId,res,code,permissionTitle='child') {
   const permission = await permissionsModel.findOne({ title: permissionTitle });
   if (!permission) {
-    return res.status(409).json({ message: 'there is no children' }); 
+    return res.status(409).json({ message: 'there is no children1' }); 
   }
 
+  console.log(permission._id)
   const users = await userModel.find({
     family_id: familyId,
     permissions_id: permission._id,
@@ -74,7 +73,7 @@ async function fetchChildren(familyId,res,code,permissionTitle='child') {
   }).select('_id').lean();
 
   if (!users.length) {
-    return res.status(409).json({ message: 'there is no children' }); 
+    return res.status(409).json({ message: 'there is no children2' }); 
   }
 
   const userIds = users.map(u => u._id);
