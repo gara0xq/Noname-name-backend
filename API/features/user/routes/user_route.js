@@ -17,6 +17,7 @@ const updateFamilyTask = require('../../user/Controllers/parent/Tasks/update_fam
 const updateChildController = require('../Controllers/parent/childMethods/update_child')
 const deleteChild =require('../Controllers/parent/childMethods/delete_child')
 const deleteTask=require('../Controllers/parent/Tasks/delete_task')
+const deleteFamily =require("../Controllers/parent/parentinfo/delete_family")
 
 
 
@@ -37,6 +38,7 @@ router.put('/parent/updateChild',updateChildController.updatedChild)
 
 router.delete('/parent/deleteChild',deleteChild.deleteChild)
 router.delete('/parent/deleteTask',deleteTask.deleteTask)
+router.delete('/parent/deleteFamily',deleteFamily.deleteFamily)
 
 
 module.exports = router;
