@@ -7,7 +7,7 @@ const child_model = require('../../../models/child_model');
 const tasks_model = require('../../../models/tasks_model');
 
 exports.deleteFamily = async (req, res) => {
-  // get mongoose instance from a model if available, otherwise require it
+  
   const mongoose = parent_model?.db?.mongoose || require('mongoose');
   let session;
 
@@ -71,7 +71,7 @@ exports.deleteFamily = async (req, res) => {
       await user_model.deleteMany({ family_id: familyId }, { session });
 
       // delete family
-      const deleted = await family_model.findOneAndDelete({ _id: familyId }, { session });
+      const deleted = await family_model.findByIdAndDelete(familyId).session(session);
       if (!deleted) {
         await session.abortTransaction();
         session.endSession();
@@ -84,7 +84,6 @@ exports.deleteFamily = async (req, res) => {
     } catch (txErr) {
       await session.abortTransaction();
       session.endSession();
-      console.error('Transaction failed:', txErr);
       return res.status(500).json({ message: 'Could not delete family and related data', error: txErr.message });
     }
   } catch (error) {
