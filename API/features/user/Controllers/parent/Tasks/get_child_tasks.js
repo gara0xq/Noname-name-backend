@@ -32,8 +32,11 @@ exports.get_child_task = async (req, res) => {
     if (!childcode) return res.status(400).json({ message: 'child code is required' });
 
 
-    const tasksResult = await fetchTaskByChildCode(childcode);
-    if (!tasksResult) return res.status(404).json({ message: 'Task not found' });
+    const tasksResult = await fetchTaskByChildCode(childcode,familyId);
+       if (!tasksResult) return res.status(404).json({ message: 'Parent not found' });
+    if (Array.isArray(tasksResult) && tasksResult.length === 0) {
+      return res.status(200).json({ message: 'there is no tasks', tasks: [] });
+    }
 
     return res.status(200).json({
       message: 'Task fetched successfully',
@@ -48,7 +51,7 @@ exports.get_child_task = async (req, res) => {
   }
 };
 
-async function fetchTaskByChildCode(childcode) {
+async function fetchTaskByChildCode(childcode,familyId) {
   const existchild = await childModel.findOne({ code: childcode });
   if (!existchild) return null; 
 
@@ -56,6 +59,13 @@ async function fetchTaskByChildCode(childcode) {
   const tasks = await taskModel.find({ child_id: existchild._id }).sort({ created_at: -1 });
 
   if (!tasks || tasks.length === 0) return [];
+      const currentChildUser = await userModel.findOne({
+        family_id : familyId,
+        _id:existchild.user_id
+      })
+      if(!currentChildUser) return res.status(404).json({
+          message: 'code is incorrect',
+        });
 
 
   const childName = await getNameById(existchild._id);
@@ -71,8 +81,8 @@ async function fetchTaskByChildCode(childcode) {
     created_at: t.created_at,
     child_name: childName
   }));
-
-  return mapped;
+  
+  return mapped; 
 }
 
 

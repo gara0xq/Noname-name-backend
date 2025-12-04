@@ -42,7 +42,18 @@ exports.get_children = async (req, res) => {
     if (typeof code !== 'string' || !code.trim()) {
     return res.status(400).json({ message: 'code is required' });
   }
+  const currentChild = await childModel.findOne({code})
+  if (!currentChild) return res.status(404).json({
+    message:'child not found'
+  })
   code = code.trim();
+      const currentChildUser = await userModel.findOne({
+        family_id : familyId,
+        _id:currentChild.user_id
+      })
+      if(!currentChildUser) return res.status(404).json({
+          message: 'code is incorrect',
+        });
     const result = await fetchChildren(familyId,res,code)
     return res.status(200).json(result);
   }catch(error){
@@ -62,10 +73,10 @@ exports.get_children = async (req, res) => {
 async function fetchChildren(familyId,res,code,permissionTitle='child') {
   const permission = await permissionsModel.findOne({ title: permissionTitle });
   if (!permission) {
-    return res.status(409).json({ message: 'there is no children1' }); 
+    return res.status(409).json({ message: 'there is no children' }); 
   }
 
-  console.log(permission._id)
+
   const users = await userModel.find({
     family_id: familyId,
     permissions_id: permission._id,
@@ -73,7 +84,7 @@ async function fetchChildren(familyId,res,code,permissionTitle='child') {
   }).select('_id').lean();
 
   if (!users.length) {
-    return res.status(409).json({ message: 'there is no children2' }); 
+    return res.status(409).json({ message: 'there is no children' }); 
   }
 
   const userIds = users.map(u => u._id);

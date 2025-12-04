@@ -15,6 +15,8 @@ const getTaskController = require('../../user/Controllers/parent/Tasks/get_curre
 const getChildTasksController = require('../../user/Controllers/parent/Tasks/get_child_tasks')
 const updateFamilyTask = require('../../user/Controllers/parent/Tasks/update_family_task')
 const updateChildController = require('../Controllers/parent/childMethods/update_child')
+const deleteChild =require('../Controllers/parent/childMethods/delete_child')
+const deleteTask=require('../Controllers/parent/Tasks/delete_task')
 
 
 
@@ -32,6 +34,9 @@ router.get('/parent/getChildTasks',getChildTasksController.get_child_task)
 router.put('/parent/updateUserPass',updateParentPassController.updatePass)
 router.put('/parent/updateFamilyTask',updateFamilyTask.updateFamilyTask)
 router.put('/parent/updateChild',updateChildController.updatedChild)
+
+router.delete('/parent/deleteChild',deleteChild.deleteChild)
+router.delete('/parent/deleteTask',deleteTask.deleteTask)
 
 
 module.exports = router;
