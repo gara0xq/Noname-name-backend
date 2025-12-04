@@ -19,8 +19,9 @@ const deleteChild =require('../Controllers/parent/childMethods/delete_child')
 const deleteTask=require('../Controllers/parent/Tasks/delete_task')
 const deleteFamily =require("../Controllers/parent/parentinfo/delete_family")
 const addReward = require('../Controllers/parent/rewards/add_reward')
+const getReward = require('../Controllers/parent/rewards/get_reward')
 
-
+// POST methode
 router.post('/parent/login', loginController.login);
 router.post('/parent/register', signUpController.register);
 router.post('/parent/addChild',addChild.addChild)
@@ -28,19 +29,20 @@ router.post('/child/login',loginChildController.login)
 router.post('/parent/add_task',addTaskcontroller.addTask)
 router.post('/parent/addReward',addReward.addReward)
 
-
+// GET methode
 router.get('/parent/get_current', getUser.getCurrent);
 router.get('/parent/getChildren',getChildren.get_children)
 router.get('/child/getChild',getChild.get_children)
 router.get('/parent/getTasks',getTasksController.get_tasks)
 router.get('/parent/getCurrentTask',getTaskController.get_current_task)
 router.get('/parent/getChildTasks',getChildTasksController.get_child_task)
+router.get('/parent/getReward',getReward.getReward)
 
-
+// PUT methode
 router.put('/parent/updateUserPass',updateParentPassController.updatePass)
 router.put('/parent/updateFamilyTask',updateFamilyTask.updateFamilyTask)
 router.put('/parent/updateChild',updateChildController.updatedChild)
-
+// DELETE methode
 router.delete('/parent/deleteChild',deleteChild.deleteChild)
 router.delete('/parent/deleteTask',deleteTask.deleteTask)
 router.delete('/parent/deleteFamily',deleteFamily.deleteFamily)
