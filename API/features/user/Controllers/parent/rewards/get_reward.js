@@ -62,7 +62,7 @@ exports.getReward = async (req, res) => {
     });
 
     return res.status(201).json({
-      message: 'Reward created',
+      message: 'Reward fetched successfully',
       reward: newReward
     });
 
