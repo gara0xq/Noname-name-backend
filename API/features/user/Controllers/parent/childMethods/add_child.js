@@ -16,8 +16,8 @@ exports.addChild = async (req, res) => {
     const parentUserId = decoded.userId;     
     const familyId = decoded.familyId;                     
 
-    let { name, gender, title } = req.body;
-    if (!name || !gender) {
+    let { name, gender, title , birthDate} = req.body;
+    if (!name || !gender || !birthDate) {
       return res.status(400).json({
         message: 'name and gender are required',
       });
@@ -33,6 +33,12 @@ exports.addChild = async (req, res) => {
 
     name = String(name).trim();
     gender = String(gender).trim().toLowerCase();
+    birthDate = new Date(birthDate)
+    if (isNaN(birthDate.getTime())) {
+      return res.status(400).json({ message: 'Invalid birthDate format' });
+}
+
+
     if (!['male', 'female'].includes(gender)) {
       return res.status(400).json({ message: 'gender must be male, female ' });
     }
@@ -90,6 +96,7 @@ exports.addChild = async (req, res) => {
       user_id: newUser._id,
       gender,
       code: childCode,
+      birth_date: birthDate
     });
 
     return res.status(201).json({
@@ -100,6 +107,7 @@ exports.addChild = async (req, res) => {
         family_id: newUser.family_id,
         child_code: childCode,
         gender: child.gender,
+        birthDate: birthDate,
         created_at: newUser.created_at,
       },
     });

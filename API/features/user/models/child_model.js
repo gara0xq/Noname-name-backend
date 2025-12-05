@@ -18,7 +18,11 @@ const childSchema = new mongoose.Schema(
 
 
     },
-    points: { type: Number, default: 0 }
+    points: { type: Number, default: 0 },
+    birth_date:{
+      type:Date,
+      required: true
+    }
   },
   { timestamps: false, versionKey: false }
 );

@@ -29,11 +29,18 @@ exports.get_children = async (req, res) => {
       });
     }
 
-   
-    const result = await fetchAllChildren(familyId,res);
+    const result = await fetchAllChildren(familyId);
 
+    // If no children exist
+    if (!result.status) {
+      return res.status(409).json({
+        message: result.message,
+        children: result.children
+      });
+    }
 
     return res.status(200).json(result);
+
   } catch (error) {
     console.error(error);
     if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
@@ -45,10 +52,13 @@ exports.get_children = async (req, res) => {
   }
 };
 
-async function fetchAllChildren(familyId,res, permissionTitle = 'child') {
+async function fetchAllChildren(familyId, permissionTitle = 'child') {
   const permission = await permissionsModel.findOne({ title: permissionTitle });
   if (!permission) {
-    return res.status(409).json({ message: 'there is no children' }); 
+    return {
+      message: 'there is no children',
+      children: []
+    };
   }
 
   const users = await userModel.find({
@@ -57,7 +67,10 @@ async function fetchAllChildren(familyId,res, permissionTitle = 'child') {
   }).select('_id');
 
   if (!users.length) {
-    return res.status(409).json({ message: 'there is no children' }); 
+    return {
+      message: 'there is no children',
+      children: []
+    };
   }
 
   const userIds = users.map(u => u._id);
@@ -65,22 +78,24 @@ async function fetchAllChildren(familyId,res, permissionTitle = 'child') {
   const children = await childModel
     .find({ user_id: { $in: userIds } })
     .populate('user_id', 'name')
-    .select('code gender points user_id');
+    .select('code gender points user_id birth_date');
 
   if (!children.length) {
     return {
-      status: false,
+
       message: 'there is no children',
       children: []
     };
   }
 
   return {
+
     message: 'children fetched successfully',
     children: children.map(c => ({
       name: c.user_id ? c.user_id.name : null,
       code: c.code,
       gender: c.gender,
+      birth_date: c.birth_date,
       points: c.points ?? 0
     }))
   };

@@ -15,8 +15,8 @@ exports.updatedChild = async (req, res) => {
     const parentUserId = decoded.userId;
     const familyId = decoded.familyId;
 
-    let { name, gender, title, code } = req.body;
-    if (!name || !gender || !code) {
+    let { name, gender, title, code, birth_date } = req.body;
+    if (!name || !gender || !code || !birth_date) {
       return res.status(400).json({
         message: 'name and gender and code are required',
       });
@@ -24,11 +24,15 @@ exports.updatedChild = async (req, res) => {
 
     name = String(name).trim();
     gender = String(gender).trim().toLowerCase();
+    birth_date = new Date(birth_date)
 
     const parentUserDoc = await userModel.findById(parentUserId);
     if (parentUserDoc && parentUserDoc.name && parentUserDoc.name.trim().toLowerCase() === name.toLowerCase()) {
       return res.status(409).json({ message: "child name can't be the same as parent name" });
     }
+     if (isNaN(birth_date.getTime())) {
+      return res.status(400).json({ message: 'Invalid birthDate format' });
+}
 
     if (!['male', 'female'].includes(gender)) {
       return res.status(400).json({ message: 'gender must be male or female' });
@@ -86,14 +90,14 @@ exports.updatedChild = async (req, res) => {
 
     const updatedChild = await childModel.findOneAndUpdate(
       { code: code },
-      { $set: { gender: gender } },
+      { $set: { gender: gender ,birth_date:birth_date} },
       { new: true }
     );
     if (!updatedChild) {
       return res.status(500).json({ message: 'Failed to update child record' });
     }
 
-    return res.status(201).json({
+    return res.status(200).json({
       message: 'Child updated successfully',
       child: {
         user_id: updatedUser._id,

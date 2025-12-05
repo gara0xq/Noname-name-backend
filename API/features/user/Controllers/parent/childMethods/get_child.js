@@ -92,7 +92,7 @@ async function fetchChildren(familyId,res,code,permissionTitle='child') {
   const children = await childModel
     .find({ user_id: { $in: userIds } ,code:code})
     .populate('user_id', 'name')
-    .select('code gender points user_id');
+    .select('code gender points user_id birth_date');
 
   if (!children.length) {
     return res.status(409).json({ message: 'there is no child' }); 
@@ -104,6 +104,7 @@ async function fetchChildren(familyId,res,code,permissionTitle='child') {
       name: children[0].user_id ? children[0].user_id.name : null,
       code: children[0].code,
       gender: children[0].gender,
+      birth_date: children[0].birth_date,
       points: children[0].points ?? 0
     }
   };
