@@ -27,6 +27,7 @@ const get_my_tasks = require('../Controllers/child/user_tasks/get_user_task');
 const get_current_task = require('../Controllers/child/user_tasks/get_current_task');
 const get_my_rewards = require('../Controllers/child/reward/get_all_reward');
 const redeem_my_rewards = require('../Controllers/child/reward/redeem_reward');
+const submit_task_proof = require('../Controllers/child/submit_task/submit');
 
 // POST methode
 router.post('/parent/login', loginController.login);
@@ -35,6 +36,7 @@ router.post('/parent/addChild',addChild.addChild)
 router.post('/child/login',loginChildController.login)
 router.post('/parent/add_task',addTaskcontroller.addTask)
 router.post('/parent/addReward',addReward.addReward)
+router.post('/child/submit',submit_task_proof.submit_task_proof)
 
 // GET methode
 router.get('/parent/get_current', getUser.getCurrent);

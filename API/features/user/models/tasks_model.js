@@ -28,9 +28,10 @@ const tasksSchema= new mongoose.Schema(
             type: Number,
             required:true
         },
-        status :{
+        status: {
             type: String,
-            default:"pending"
+            enum: ['pending', 'submitted', 'completed', 'expired'],
+            default: 'pending'
         },
         punishment :{
             type: String,
