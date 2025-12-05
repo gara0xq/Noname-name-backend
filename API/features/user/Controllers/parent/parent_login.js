@@ -29,6 +29,7 @@ exports.login= async (req,res) =>{
 
         const existpermission = await permissionsModel.findOne(existinguser.permissions_id)
         const token = await jwtSign.signJwt(existingParent,existinguser,existpermission)
+        if(!token)return res.status(400).json({message:"problem with token creation"})
 
         return res.status(201).json({
             token:token

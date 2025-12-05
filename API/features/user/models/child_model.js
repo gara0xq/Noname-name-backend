@@ -10,7 +10,7 @@ const childSchema = new mongoose.Schema(
       required: true,
       unique: true
     },
-    code: { type: String, trim: true,required: true },
+    code: { type: String, trim: true,required: true ,unique: true},
     gender:{
       type: String,
       trim: true,

@@ -1,8 +1,9 @@
-const bcrypt = require('bcryptjs');
+
 const userModel = require('../../models/user_model');
-const jwt = require('jsonwebtoken');
+const jwt = require('../../../../config/jwt_token_for_child');
 const childModel = require('../../models/child_model')
 const permissionsModel = require('../../models/permissions_model');
+const family_model = require('../../models/family_model')
 
 
 exports.login= async (req,res) =>{
@@ -17,7 +18,7 @@ exports.login= async (req,res) =>{
 
                 if (!existingchild) {
 
-                    return res.status(404).json({ message: 'childCode not found'  });
+                    return res.status(404).json({ message: 'child not found'  });
                 }
 
         
@@ -33,24 +34,19 @@ exports.login= async (req,res) =>{
                 }
 
         const existpermission = await permissionsModel.findById(existinguser.permissions_id)
+        if(!existpermission) return res.status(404).json({message:"cant find role"})
+        if(existpermission.title.toLowerCase().trim() !== "child") return res.status(403).json({message: " user isnt child "})
+
+        const existfamily = await family_model.findById(existinguser.family_id)
+        if(!existfamily) return res.status(404).json({message:"family not found"})
 
 
-        const token = jwt.sign(
-            {
-                userId: existinguser._id,
-                familyId:existinguser.family_id,
-                childId:existingchild._id ,
-                role: existpermission.title
-            }, process.env.ACCESS_TOKEN_SECRET
-        );
-    return res.status(200).json({
-        message: "Child login successful",
-        token: token
+        const token = await jwt.signJwt(existingchild,existinguser,existpermission,childCode)
+        if(!token)return res.status(400).json({message:"problem with token creation"})
+            return res.status(200).json({
+                message: "Child login successful",
+                token: token
 });
-        
-
-
-    
 
     } catch (error) {
         console.log(error);

@@ -10,7 +10,7 @@ exports.addChild = async (req, res) => {
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) return res.sendStatus(401);
 
-    const decoded = await verifyJwt.verifyJwt(token)
+    const decoded = await verifyJwt.verifyJwt(token,res)
     
 
     const parentUserId = decoded.userId;     
