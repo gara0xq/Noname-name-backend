@@ -77,7 +77,7 @@ exports.addTask = async (req, res) => {
             child_id:currentChild._id,
             title:title,
             description:description,
-            points:points,  
+            points:points,
             punishment:punishment,
             expire_date:expire_date,
             

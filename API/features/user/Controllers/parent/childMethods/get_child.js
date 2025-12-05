@@ -3,6 +3,7 @@ const userModel = require('../../../models/user_model');
 const permissionsModel = require('../../../models/permissions_model');
 const familyModel = require('../../../models/family_model');
 const childModel = require('../../../models/child_model');
+const taskModel = require('../../../models/tasks_model')
 const verifyJwt = require('../../../../../config/jwt_token_for_parent')
 
 exports.get_children = async (req, res) => {
@@ -98,6 +99,8 @@ async function fetchChildren(familyId,res,code,permissionTitle='child') {
     return res.status(409).json({ message: 'there is no child' }); 
   }
 
+  const progress = await fetchTaskStatusByChildCode(code,familyId)
+
   return {
     message: 'child fetched successfully',
     child:  {
@@ -105,7 +108,52 @@ async function fetchChildren(familyId,res,code,permissionTitle='child') {
       code: children[0].code,
       gender: children[0].gender,
       birth_date: children[0].birth_date,
-      points: children[0].points ?? 0
+      points: children[0].points ?? 0,
+      pendingTask : progress.pending,
+      completedTask : progress.completed,
+      expiredTask : progress.expired,
+      progress:progress.progress
     }
   };
 }
+
+async function fetchTaskStatusByChildCode(childcode, familyId) {
+  const existchild = await childModel.findOne({ code: childcode });
+  if (!existchild) return null;
+
+  const currentChildUser = await userModel.findOne({
+    family_id: familyId,
+    _id: existchild.user_id
+  });
+  if (!currentChildUser) return null;
+
+  const tasks = await taskModel.find({ child_id: existchild._id });
+
+  if (!tasks || tasks.length === 0) {
+    return {
+      pending: 0,
+      completed: 0,
+      expired: 0,
+    };
+  }
+
+  let pending = 0;
+  let completed = 0;
+  let expired = 0;
+
+  tasks.forEach(t => {
+    if (t.status === "pending") pending++;
+    if (t.status === "completed") completed++;
+    if (t.status === "expired") expired++;
+  });
+
+  let progress =  completed/(tasks.length) 
+
+  return {
+    pending,
+    completed,
+    expired,
+    progress
+  };
+}
+
