@@ -134,20 +134,35 @@ async function fetchTaskStatusByChildCode(childcode, familyId) {
       pending: 0,
       completed: 0,
       expired: 0,
+      progress: 0
     };
   }
 
   let pending = 0;
   let completed = 0;
   let expired = 0;
+  const now = new Date();
 
-  tasks.forEach(t => {
-    if (t.status === "pending") pending++;
-    if (t.status === "completed") completed++;
-    if (t.status === "expired") expired++;
-  });
+  for (const t of tasks) {
+    
+    let finalStatus = t.status;
 
-  let progress =  completed/(tasks.length) 
+    const expireDate = new Date(t.expire_date);
+    if (expireDate < now && t.status !== "completed") {
+    
+      finalStatus = await updateTaskIfExpired(t);
+
+    }
+
+    
+    if (finalStatus === "pending") pending++;
+    else if (finalStatus === "completed") completed++;
+    else if (finalStatus === "expired") expired++;
+    
+  }
+
+  const total = tasks.length;
+  const progress = total > 0 ? (completed / total) : 0;
 
   return {
     pending,
@@ -155,5 +170,22 @@ async function fetchTaskStatusByChildCode(childcode, familyId) {
     expired,
     progress
   };
+}
+async function updateTaskIfExpired(task) {
+  const now = new Date();
+  const expireDate = new Date(task.expire_date);
+
+  if (expireDate < now && task.status !== "completed") {
+    
+    await taskModel.findByIdAndUpdate(
+      task._id,
+      { status: "expired" },
+      { new: true }
+    );
+
+    return "expired";
+  }
+
+  return task.status; 
 }
 

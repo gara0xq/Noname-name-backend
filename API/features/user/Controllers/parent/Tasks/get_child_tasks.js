@@ -69,18 +69,26 @@ async function fetchTaskByChildCode(childcode,familyId) {
 
 
   const childName = await getNameById(existchild._id);
+   const now = new Date();
 
-  const mapped = tasks.map(t => ({
-    id: t._id,
-    title: t.title,
-    description: t.description,
-    punishment: t.punishment,
-    points: t.points,
-    status: t.status,
-    expire_date: t.expire_date,
-    created_at: t.created_at,
-    child_name: childName
-  }));
+  const mapped = []
+
+    for (const t of tasks) {
+    
+    const finalStatus = await updateTaskIfExpired(t);
+
+    mapped.push({
+      id: t._id,
+      title: t.title,
+      description: t.description,
+      punishment: t.punishment,
+      points: t.points,
+      status: finalStatus,
+      expire_date: t.expire_date,
+      created_at: t.created_at,
+      child_name: childName
+    });
+  }
   
   return mapped; 
 }
@@ -91,4 +99,23 @@ async function getNameById(child_id) {
   const child = await childModel.findById(child_id).populate('user_id', 'name');
   if (!child || !child.user_id) return null;
   return child.user_id.name;
+}
+
+
+async function updateTaskIfExpired(task) {
+  const now = new Date();
+  const expireDate = new Date(task.expire_date);
+
+  if (expireDate < now && task.status !== "completed") {
+    
+    await taskModel.findByIdAndUpdate(
+      task._id,
+      { status: "expired" },
+      { new: true }
+    );
+
+    return "expired";
+  }
+
+  return task.status; 
 }

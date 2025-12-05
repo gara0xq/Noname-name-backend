@@ -64,21 +64,26 @@ async function fetchAlltasks(parentId) {
   const taskss = await taskModel.find({ _id: { $in: taskIds } });
   if (!taskss || taskss.length === 0) return [];
 
-  const tasksss = await Promise.all(
-    taskss.map(async t => {
+  const mapped = []
+  for (const t of taskss) {
+      // ensure the task's status is updated if expired
+      // updateTaskIfExpired should update DB and return the final status string
+      const finalStatus = await updateTaskIfExpired(t);
+
+      // get child name (your existing helper)
       const name = await getNameById(t.child_id);
-      return {
+
+      mapped.push({
         id: t._id,
         title: t.title,
         points: t.points,
-        status: t.status,
+        status: finalStatus,
         expire_date: t.expire_date,
         name: name
-      };
-    })
-  );
+      });
+    }
 
-  return tasksss;
+  return mapped;
 }
 
 async function getNameById(child_id) {
@@ -86,4 +91,21 @@ async function getNameById(child_id) {
   const child = await childModel.findById(child_id).populate('user_id', 'name');
   if (!child || !child.user_id) return null;
   return child.user_id.name;
+}
+async function updateTaskIfExpired(task) {
+  const now = new Date();
+  const expireDate = new Date(task.expire_date);
+
+  if (expireDate < now && task.status !== "completed") {
+    
+    await taskModel.findByIdAndUpdate(
+      task._id,
+      { status: "expired" },
+      { new: true }
+    );
+
+    return "expired";
+  }
+
+  return task.status; 
 }
