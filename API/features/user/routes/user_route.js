@@ -26,6 +26,7 @@ const getUserData = require('../Controllers/child/user_info/get_user_info');
 const get_my_tasks = require('../Controllers/child/user_tasks/get_user_task');
 const get_current_task = require('../Controllers/child/user_tasks/get_current_task');
 const get_my_rewards = require('../Controllers/child/reward/get_all_reward');
+const redeem_my_rewards = require('../Controllers/child/reward/redeem_reward');
 
 // POST methode
 router.post('/parent/login', loginController.login);
@@ -53,6 +54,7 @@ router.put('/parent/updateUserPass',updateParentPassController.updatePass)
 router.put('/parent/updateFamilyTask',updateFamilyTask.updateFamilyTask)
 router.put('/parent/updateChild',updateChildController.updatedChild)
 router.put('/parent/updatedReward',updatedReward.updatedReward)
+router.put('/child/redeemedReward',redeem_my_rewards.redeem_my_rewards)
 // DELETE methode
 router.delete('/parent/deleteChild',deleteChild.deleteChild)
 router.delete('/parent/deleteTask',deleteTask.deleteTask)
