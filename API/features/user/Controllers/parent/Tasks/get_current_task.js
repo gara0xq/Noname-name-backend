@@ -3,6 +3,7 @@ const userModel = require('../../../models/user_model');
 const familyModel = require('../../../models/family_model');
 const childModel = require('../../../models/child_model');
 const taskModel = require('../../../models/tasks_model');
+const submit_model = require('../../../models/submit_model');
 require('dotenv').config()
 
 exports.get_current_task = async (req, res) => {
@@ -52,9 +53,16 @@ async function fetchTaskById(taskId) {
 
   const task = await taskModel.findById(taskId);
   if (!task) return null;
-
-  
   const childName = await getNameById(task.child_id);
+  const existSubmition = await submit_model.findOne({task_id:taskId})
+  let pic , submitDate
+  
+  if(existSubmition){
+    
+    pic = existSubmition.proof_image_url,
+    submitDate = existSubmition.submited_at
+    
+  }
 
 
   return {
@@ -66,7 +74,9 @@ async function fetchTaskById(taskId) {
     status: task.status,
     expire_date: task.expire_date,
     created_at: task.created_at,
-    child_name: childName
+    child_name: childName,
+    proof_image_url:existSubmition? pic :"" ,
+    submitDate:existSubmition? submitDate :""
   };
 }
 
