@@ -55,6 +55,7 @@ exports.get_current_task = async (req, res) => {
     if (!task) {
       return res.status(404).json({ message: "Task not found or not yours" });
     }
+    if(task.status == "submitted") return res.status(403).json({message:"this task aready submitted "})
 
     return res.status(200).json({
       message: "Task fetched successfully",
