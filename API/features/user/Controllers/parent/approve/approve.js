@@ -4,12 +4,11 @@ const parentModel = require('../../../models/parent_model');
 const childModel = require('../../../models/child_model');
 const taskModel = require('../../../models/tasks_model');
 const submitModel = require('../../../models/submit_model');
-const approveModel = require('../../../models/approve_model'); // <-- your approve schema
+const approveModel = require('../../../models/approve_model');
 require('dotenv').config();
 
 exports.approve_task = async (req, res) => {
   try {
-    // 1) Auth
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) return res.status(401).json({ message: 'No token provided' });
@@ -27,7 +26,6 @@ exports.approve_task = async (req, res) => {
       return res.status(403).json({ message: 'Token role is not parent' });
     }
 
-    // 2) Get parent & parent user & family
     let parent = null;
     if (parentId) {
       parent = await parentModel
@@ -58,14 +56,12 @@ exports.approve_task = async (req, res) => {
 
     const parentFamilyId = parentUser.family_id;
 
-    // 3) Validate body
     const { taskId } = req.body || {};
     if (!taskId || typeof taskId !== 'string' || !taskId.trim()) {
       return res.status(400).json({ message: 'taskId is required' });
     }
     const tid = taskId.trim();
 
-    // 4) Get task and ensure this parent owns it
     const task = await taskModel
       .findById(tid)
       .select('_id parent_id child_id points status')
@@ -81,7 +77,7 @@ exports.approve_task = async (req, res) => {
         .json({ message: 'You are not allowed to approve this task' });
     }
 
-    // 5) Get child + child user + child family
+
     const child = await childModel
       .findById(task.child_id)
       .select('_id user_id points')
@@ -110,8 +106,6 @@ exports.approve_task = async (req, res) => {
         .json({ message: 'You are not allowed to approve this child task' });
     }
 
-    // 6) Check task status
-    // ERD: status enum("Completed", "Pending", "Declined")
     if (task.status === 'completed') {
       return res.status(400).json({ message: 'Task already completed' });
     }
@@ -119,10 +113,9 @@ exports.approve_task = async (req, res) => {
       return res.status(400).json({ message: 'Task was declined before' });
     }
 
-    // 7) Get latest submission for this task
     const submission = await submitModel
       .findOne({ task_id: task._id })
-      .sort({ submited_at: -1 }) // latest submission
+      .sort({ submited_at: -1 }) 
       .lean();
 
     if (!submission) {
@@ -131,7 +124,6 @@ exports.approve_task = async (req, res) => {
         .json({ message: 'No submission found for this task to approve' });
     }
 
-    // 8) Check if this submission already approved
     const existingApprovement = await approveModel
       .findOne({ task_submition_id: submission._id })
       .lean();
@@ -142,25 +134,21 @@ exports.approve_task = async (req, res) => {
         .json({ message: 'This submission is already approved' });
     }
 
-    // 9) Create approvement (task_approvement)
     const redeemedPoints = Number(task.points) || 0;
 
     const approvement = await approveModel.create({
       task_submition_id: submission._id,
       redeemed_point: redeemedPoints,
-      // submited_at has default Date.now in schema
     });
 
-    // 10) Update task status to Completed
     const updatedTask = await taskModel
       .findByIdAndUpdate(
         task._id,
-        { status: 'completed' }, // match your enum
+        { status: 'completed' }, 
         { new: true }
       )
       .lean();
 
-    // 11) Add points to child
     let updatedChild = await childModel
       .findByIdAndUpdate(
         child._id,
@@ -171,10 +159,7 @@ exports.approve_task = async (req, res) => {
 
     return res.status(200).json({
       message: 'Task approved successfully',
-      approvement,      // from "approve" collection
-      submission,       // latest submission used
-      task: updatedTask,
-      child: updatedChild,
+       
     });
   } catch (error) {
     console.error('approve_task error:', error);

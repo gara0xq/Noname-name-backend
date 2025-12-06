@@ -125,9 +125,7 @@ exports.disapprove_task = async (req, res) => {
 
     return res.status(200).json({
       message: 'Task disapproved successfully',
-      submission,
-      task: updatedTask,
-      child: updatedChild,
+
     });
   } catch (error) {
     return res.status(500).json({
