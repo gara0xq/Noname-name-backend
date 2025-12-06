@@ -32,7 +32,7 @@ exports.get_children = async (req, res) => {
     const result = await fetchAllChildren(familyId);
 
     // If no children exist
-    if (!result.status) {
+    if (!result) {
       return res.status(409).json({
         message: result.message,
         children: result.children
