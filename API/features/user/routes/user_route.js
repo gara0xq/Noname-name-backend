@@ -29,6 +29,7 @@ const get_my_rewards = require('../Controllers/child/reward/get_all_reward');
 const redeem_my_rewards = require('../Controllers/child/reward/redeem_reward');
 const submit_task_proof = require('../Controllers/child/submit_task/submit');
 const approve_task = require('../Controllers/parent/approve/approve');
+const disapprove_task = require('../Controllers/parent/approve/disapprove');
 
 // POST methode
 router.post('/parent/login', loginController.login);
@@ -42,7 +43,7 @@ router.post('/child/submit',submit_task_proof.submit_task_proof)
 // GET methode
 router.get('/parent/get_current', getUser.getCurrent);
 router.get('/parent/getChildren',getChildren.get_children)
-router.get('/child/getChild',getChild.get_children)
+router.get('/child/getChild',getChild.get_child)
 router.get('/parent/getTasks',getTasksController.get_tasks)
 router.get('/parent/getCurrentTask',getTaskController.get_current_task)
 router.get('/parent/getChildTasks',getChildTasksController.get_child_task)
@@ -59,6 +60,7 @@ router.put('/parent/updateChild',updateChildController.updatedChild)
 router.put('/parent/updatedReward',updatedReward.updatedReward)
 router.put('/child/redeemedReward',redeem_my_rewards.redeem_my_rewards)
 router.put('/parent/approve',approve_task.approve_task)
+router.put('/parent/reject_task',disapprove_task.disapprove_task)
 // DELETE methode
 router.delete('/parent/deleteChild',deleteChild.deleteChild)
 router.delete('/parent/deleteTask',deleteTask.deleteTask)

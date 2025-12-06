@@ -116,5 +116,5 @@ async function updateTaskIfExpired(task) {
     return 'expired' ;
   }
 
-  return { status: task.status };
+  return task.status ;
 }
