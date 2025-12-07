@@ -1,4 +1,4 @@
-const verifyJwt = require('../../../../../config/jwt_token_for_parent')
+const verifyJwt = require('../../../../../config/jwt_token_for_parent');
 const userModel = require('../../../models/user_model');
 const familyModel = require('../../../models/family_model');
 const parent_model = require('../../../models/parent_model');
@@ -11,7 +11,7 @@ exports.updateFamilyTask = async (req, res) => {
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) return res.status(401).json({ message: 'Unauthorized' });
 
-    const decoded = await verifyJwt.verifyJwt(token)
+    const decoded = await verifyJwt.verifyJwt(token);
 
     const parentUserId = decoded.userId;
     const familyId = decoded.familyId;
@@ -24,8 +24,10 @@ exports.updateFamilyTask = async (req, res) => {
     const parentUser = await userModel.findById(parentUserId);
     if (!parentUser) return res.status(403).json({ message: 'Parent user not found' });
 
-    if (String(parentUser.family_id) !== String(family._id? family._id : family._id)) {
-      return res.status(403).json({ message: 'You are not allowed to perform this action for this family' });
+    if (String(parentUser.family_id) !== String(family._id ? family._id : family._id)) {
+      return res
+        .status(403)
+        .json({ message: 'You are not allowed to perform this action for this family' });
     }
 
     let { title, description, points, punishment, expire_date, taskId } = req.body;
@@ -54,7 +56,6 @@ exports.updateFamilyTask = async (req, res) => {
     if (existtask.child_id) {
       const child = await childModel.findById(existtask.child_id);
       if (!child) return res.status(404).json({ message: 'Child for this task not found' });
-      
     }
     const updateobj = {
       parent_id: parentLookupId,
@@ -66,10 +67,7 @@ exports.updateFamilyTask = async (req, res) => {
       expire_date: expire_date ?? existtask.expire_date,
     };
 
-    const updateResult = await tasks_model.updateOne(
-      { _id: taskId },
-      { $set: updateobj }
-    );
+    const updateResult = await tasks_model.updateOne({ _id: taskId }, { $set: updateobj });
 
     if (!updateResult.acknowledged) {
       return res.status(500).json({ message: 'Failed to update task' });
@@ -78,7 +76,9 @@ exports.updateFamilyTask = async (req, res) => {
       return res.status(404).json({ message: 'Task not found (no match for update)' });
     }
 
-    return res.status(200).json({ message: 'task updated successfully', modifiedCount: updateResult.modifiedCount });
+    return res
+      .status(200)
+      .json({ message: 'task updated successfully', modifiedCount: updateResult.modifiedCount });
   } catch (error) {
     console.error(error);
     if (error && (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError')) {
@@ -86,4 +86,4 @@ exports.updateFamilyTask = async (req, res) => {
     }
     return res.status(500).json({ message: error.message || 'Internal server error' });
   }
-}
+};

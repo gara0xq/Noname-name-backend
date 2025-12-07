@@ -1,18 +1,17 @@
-const verifyJwt = require('../../../../../config/jwt_token_for_parent')
+const verifyJwt = require('../../../../../config/jwt_token_for_parent');
 const userModel = require('../../../models/user_model');
 const familyModel = require('../../../models/family_model');
 const childModel = require('../../../models/child_model');
 const taskModel = require('../../../models/tasks_model');
-require('dotenv').config()
+require('dotenv').config();
 
 exports.get_child_task = async (req, res) => {
   try {
-
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) return res.sendStatus(401);
 
-    const decoded = await verifyJwt.verifyJwt(token)
+    const decoded = await verifyJwt.verifyJwt(token);
 
     const parentUserId = decoded.userId;
     const familyId = decoded.familyId;
@@ -24,23 +23,23 @@ exports.get_child_task = async (req, res) => {
     if (!parentUser) return res.status(403).json({ message: 'Parent user not found' });
 
     if (String(parentUser.family_id) !== String(family._id)) {
-      return res.status(403).json({ message: 'You are not allowed to access this family resources' });
+      return res
+        .status(403)
+        .json({ message: 'You are not allowed to access this family resources' });
     }
 
-  
-    const { childcode } = req.body; 
+    const { childcode } = req.body;
     if (!childcode) return res.status(400).json({ message: 'child code is required' });
 
-
-    const tasksResult = await fetchTaskByChildCode(childcode,familyId);
-       if (!tasksResult) return res.status(404).json({ message: 'Parent not found' });
+    const tasksResult = await fetchTaskByChildCode(childcode, familyId);
+    if (!tasksResult) return res.status(404).json({ message: 'Parent not found' });
     if (Array.isArray(tasksResult) && tasksResult.length === 0) {
       return res.status(200).json({ message: 'there is no tasks', tasks: [] });
     }
 
     return res.status(200).json({
       message: 'Task fetched successfully',
-      task: tasksResult
+      task: tasksResult,
     });
   } catch (error) {
     console.error(error);
@@ -51,30 +50,28 @@ exports.get_child_task = async (req, res) => {
   }
 };
 
-async function fetchTaskByChildCode(childcode,familyId) {
+async function fetchTaskByChildCode(childcode, familyId) {
   const existchild = await childModel.findOne({ code: childcode });
-  if (!existchild) return null; 
+  if (!existchild) return null;
 
- 
   const tasks = await taskModel.find({ child_id: existchild._id }).sort({ created_at: -1 });
 
   if (!tasks || tasks.length === 0) return [];
-      const currentChildUser = await userModel.findOne({
-        family_id : familyId,
-        _id:existchild.user_id
-      })
-      if(!currentChildUser) return res.status(404).json({
-          message: 'code is incorrect',
-        });
-
+  const currentChildUser = await userModel.findOne({
+    family_id: familyId,
+    _id: existchild.user_id,
+  });
+  if (!currentChildUser)
+    return res.status(404).json({
+      message: 'code is incorrect',
+    });
 
   const childName = await getNameById(existchild._id);
-   const now = new Date();
+  const now = new Date();
 
-  const mapped = []
+  const mapped = [];
 
-    for (const t of tasks) {
-    
+  for (const t of tasks) {
     const finalStatus = await updateTaskIfExpired(t);
 
     mapped.push({
@@ -86,13 +83,12 @@ async function fetchTaskByChildCode(childcode,familyId) {
       status: finalStatus,
       expire_date: t.expire_date,
       created_at: t.created_at,
-      child_name: childName
+      child_name: childName,
     });
   }
-  
-  return mapped; 
-}
 
+  return mapped;
+}
 
 async function getNameById(child_id) {
   if (!child_id) return null;
@@ -101,20 +97,18 @@ async function getNameById(child_id) {
   return child.user_id.name;
 }
 
-
 async function updateTaskIfExpired(task) {
   const now = new Date();
   const expireDate = new Date(task.expire_date);
 
   if (task.status === 'submitted') {
-    return  'submitted' ;
+    return 'submitted';
   }
-
 
   if (expireDate < now && task.status !== 'completed') {
     await taskModel.findByIdAndUpdate(task._id, { status: 'expired' });
-    return 'expired' ;
+    return 'expired';
   }
 
-  return task.status ;
+  return task.status;
 }

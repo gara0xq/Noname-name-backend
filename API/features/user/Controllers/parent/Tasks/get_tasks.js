@@ -36,7 +36,7 @@ exports.get_tasks = async (req, res) => {
 
     return res.status(200).json({
       message: 'tasks fetched successfully',
-      tasks
+      tasks,
     });
   } catch (error) {
     if (error && error.code === 'NO_PARENT') {
@@ -60,26 +60,25 @@ async function fetchAlltasks(parentId) {
   const tasks = await taskModel.find({ parent_id: parentId }).select('_id');
   if (!tasks || tasks.length === 0) return [];
 
-  const taskIds = tasks.map(u => u._id);
+  const taskIds = tasks.map((u) => u._id);
   const taskss = await taskModel.find({ _id: { $in: taskIds } });
   if (!taskss || taskss.length === 0) return [];
 
-  const mapped = []
+  const mapped = [];
   for (const t of taskss) {
+    const finalStatus = await updateTaskIfExpired(t);
 
-      const finalStatus = await updateTaskIfExpired(t);
+    const name = await getNameById(t.child_id);
 
-      const name = await getNameById(t.child_id);
-
-      mapped.push({
-        id: t._id,
-        title: t.title,
-        points: t.points,
-        status: finalStatus,
-        expire_date: t.expire_date,
-        name: name
-      });
-    }
+    mapped.push({
+      id: t._id,
+      title: t.title,
+      points: t.points,
+      status: finalStatus,
+      expire_date: t.expire_date,
+      name: name,
+    });
+  }
 
   return mapped;
 }
@@ -95,13 +94,13 @@ async function updateTaskIfExpired(task) {
   const expireDate = new Date(task.expire_date);
 
   if (task.status === 'submitted') {
-    return 'submitted' ;
-  }
-  
-  if (expireDate < now && task.status !== 'completed') {
-    await taskModel.findByIdAndUpdate(task._id, { status: 'expired' });
-    return  'expired' ;
+    return 'submitted';
   }
 
-  return  task.status ;
+  if (expireDate < now && task.status !== 'completed') {
+    await taskModel.findByIdAndUpdate(task._id, { status: 'expired' });
+    return 'expired';
+  }
+
+  return task.status;
 }

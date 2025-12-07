@@ -1,14 +1,14 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const familySchema = new mongoose.Schema(
   {
     code: {
       type: String,
       required: false,
-      trim: true
-    }
+      trim: true,
+    },
   },
   { versionKey: false }
 );
 
-module.exports = mongoose.model("families", familySchema);
+module.exports = mongoose.model('families', familySchema);

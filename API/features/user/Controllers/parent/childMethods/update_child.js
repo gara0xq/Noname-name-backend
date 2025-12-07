@@ -24,15 +24,19 @@ exports.updatedChild = async (req, res) => {
 
     name = String(name).trim();
     gender = String(gender).trim().toLowerCase();
-    birth_date = new Date(birth_date)
+    birth_date = new Date(birth_date);
 
     const parentUserDoc = await userModel.findById(parentUserId);
-    if (parentUserDoc && parentUserDoc.name && parentUserDoc.name.trim().toLowerCase() === name.toLowerCase()) {
+    if (
+      parentUserDoc &&
+      parentUserDoc.name &&
+      parentUserDoc.name.trim().toLowerCase() === name.toLowerCase()
+    ) {
       return res.status(409).json({ message: "child name can't be the same as parent name" });
     }
-     if (isNaN(birth_date.getTime())) {
+    if (isNaN(birth_date.getTime())) {
       return res.status(400).json({ message: 'Invalid birthDate format' });
-}
+    }
 
     if (!['male', 'female'].includes(gender)) {
       return res.status(400).json({ message: 'gender must be male or female' });
@@ -62,7 +66,9 @@ exports.updatedChild = async (req, res) => {
       name: { $regex: `^${name}$`, $options: 'i' },
     });
     if (existingSameName) {
-      return res.status(409).json({ message: 'A user with this name already exists in the family' });
+      return res
+        .status(409)
+        .json({ message: 'A user with this name already exists in the family' });
     }
 
     const permissionTitle = title ? String(title).trim() : 'child';
@@ -71,13 +77,14 @@ exports.updatedChild = async (req, res) => {
       return res.status(404).json({ message: 'permission not found' });
     }
 
-        const currentChildUser = await userModel.findOne({
-          family_id : familyId,
-          _id:existchild.user_id
-        })
-        if(!currentChildUser) return res.status(404).json({
-            message: 'code is incorrect',
-          });
+    const currentChildUser = await userModel.findOne({
+      family_id: familyId,
+      _id: existchild.user_id,
+    });
+    if (!currentChildUser)
+      return res.status(404).json({
+        message: 'code is incorrect',
+      });
 
     const updatedUser = await userModel.findByIdAndUpdate(
       existchild.user_id,
@@ -90,7 +97,7 @@ exports.updatedChild = async (req, res) => {
 
     const updatedChild = await childModel.findOneAndUpdate(
       { code: code },
-      { $set: { gender: gender ,birth_date:birth_date} },
+      { $set: { gender: gender, birth_date: birth_date } },
       { new: true }
     );
     if (!updatedChild) {

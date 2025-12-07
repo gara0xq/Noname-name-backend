@@ -1,19 +1,18 @@
-const verifyJwt = require('../../../../../config/jwt_token_for_parent')
+const verifyJwt = require('../../../../../config/jwt_token_for_parent');
 const userModel = require('../../../models/user_model');
 const familyModel = require('../../../models/family_model');
 const childModel = require('../../../models/child_model');
 const taskModel = require('../../../models/tasks_model');
 const submit_model = require('../../../models/submit_model');
-require('dotenv').config()
+require('dotenv').config();
 
 exports.get_current_task = async (req, res) => {
   try {
-
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) return res.sendStatus(401);
 
-    const decoded = await verifyJwt.verifyJwt(token)
+    const decoded = await verifyJwt.verifyJwt(token);
 
     const parentUserId = decoded.userId;
     const familyId = decoded.familyId;
@@ -25,20 +24,20 @@ exports.get_current_task = async (req, res) => {
     if (!parentUser) return res.status(403).json({ message: 'Parent user not found' });
 
     if (String(parentUser.family_id) !== String(family._id)) {
-      return res.status(403).json({ message: 'You are not allowed to access this family resources' });
+      return res
+        .status(403)
+        .json({ message: 'You are not allowed to access this family resources' });
     }
 
-  
-    const { taskId } = req.params.id; 
+    const { taskId } = req.params.id;
     if (!taskId) return res.status(400).json({ message: 'taskId is required' });
-
 
     const taskResult = await fetchTaskById(taskId);
     if (!taskResult) return res.status(404).json({ message: 'Task not found' });
 
     return res.status(200).json({
       message: 'Task fetched successfully',
-      task: taskResult
+      task: taskResult,
     });
   } catch (error) {
     console.error(error);
@@ -50,20 +49,15 @@ exports.get_current_task = async (req, res) => {
 };
 
 async function fetchTaskById(taskId) {
-
   const task = await taskModel.findById(taskId);
   if (!task) return null;
   const childName = await getNameById(task.child_id);
-  const existSubmition = await submit_model.findOne({task_id:taskId})
-  let pic , submitDate
-  
-  if(existSubmition){
-    
-    pic = existSubmition.proof_image_url,
-    submitDate = existSubmition.submited_at
-    
-  }
+  const existSubmition = await submit_model.findOne({ task_id: taskId });
+  let pic, submitDate;
 
+  if (existSubmition) {
+    ((pic = existSubmition.proof_image_url), (submitDate = existSubmition.submited_at));
+  }
 
   return {
     id: task._id,
@@ -75,8 +69,8 @@ async function fetchTaskById(taskId) {
     expire_date: task.expire_date,
     created_at: task.created_at,
     child_name: childName,
-    proof_image_url:existSubmition? pic :"" ,
-    submitDate:existSubmition? submitDate :""
+    proof_image_url: existSubmition ? pic : '',
+    submitDate: existSubmition ? submitDate : '',
   };
 }
 

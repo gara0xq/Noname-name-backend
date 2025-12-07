@@ -3,7 +3,7 @@ const permissionsModel = require('../../../models/permissions_model');
 const familyModel = require('../../../models/family_model');
 const childModel = require('../../../models/child_model');
 const taskModel = require('../../../models/tasks_model');
-const jwtUtil = require('../../../../../config/jwt_token_for_child'); 
+const jwtUtil = require('../../../../../config/jwt_token_for_child');
 
 exports.getChildData = async (req, res) => {
   try {
@@ -44,10 +44,7 @@ exports.getChildData = async (req, res) => {
 
     let user;
     if (familyId && existingChild.user_id) {
-      user = await userModel
-        .findById(existingChild.user_id)
-        .select('family_id name')
-        .lean();
+      user = await userModel.findById(existingChild.user_id).select('family_id name').lean();
 
       if (!user || String(user.family_id) !== String(familyId)) {
         return res.status(403).json({ message: 'Family mismatch' });
@@ -69,22 +66,17 @@ exports.getChildData = async (req, res) => {
         expiredTask: progress.expired,
         submittedTask: progress.submitted,
         declinedTask: progress.declined,
-        progress: progress.progress
-      }
+        progress: progress.progress,
+      },
     });
   } catch (error) {
     console.error('get_my_child error:', error);
-    return res
-      .status(500)
-      .json({ message: error.message || 'Internal server error' });
+    return res.status(500).json({ message: error.message || 'Internal server error' });
   }
 };
 
 async function fetchTaskStatusByChildId(childId) {
-  const existchild = await childModel
-    .findById(childId)
-    .select('_id user_id code')
-    .lean();
+  const existchild = await childModel.findById(childId).select('_id user_id code').lean();
 
   if (!existchild) {
     return {
@@ -93,7 +85,7 @@ async function fetchTaskStatusByChildId(childId) {
       expired: 0,
       submitted: 0,
       declined: 0,
-      progress: 0
+      progress: 0,
     };
   }
 
@@ -109,7 +101,7 @@ async function fetchTaskStatusByChildId(childId) {
       expired: 0,
       submitted: 0,
       declined: 0,
-      progress: 0
+      progress: 0,
     };
   }
 
@@ -150,7 +142,7 @@ async function fetchTaskStatusByChildId(childId) {
     expired,
     submitted,
     declined,
-    progress
+    progress,
   };
 }
 
@@ -164,11 +156,7 @@ async function updateTaskIfExpired(task) {
     task.status !== 'submitted' &&
     task.status !== 'Declined'
   ) {
-    await taskModel.findByIdAndUpdate(
-      task._id,
-      { status: 'expired' },
-      { new: true }
-    );
+    await taskModel.findByIdAndUpdate(task._id, { status: 'expired' }, { new: true });
     return 'expired';
   }
 

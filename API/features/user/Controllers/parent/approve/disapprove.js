@@ -29,19 +29,13 @@ exports.disapprove_task = async (req, res) => {
       parent = await parentModel.findById(parentId).select('_id user_id').lean();
     }
     if (!parent && userId) {
-      parent = await parentModel
-        .findOne({ user_id: userId })
-        .select('_id user_id')
-        .lean();
+      parent = await parentModel.findOne({ user_id: userId }).select('_id user_id').lean();
     }
     if (!parent) {
       return res.status(404).json({ message: 'parent not found' });
     }
 
-    const parentUser = await userModel
-      .findById(parent.user_id)
-      .select('_id family_id')
-      .lean();
+    const parentUser = await userModel.findById(parent.user_id).select('_id family_id').lean();
 
     if (!parentUser || !parentUser.family_id) {
       return res.status(400).json({ message: 'Parent is not linked to any family' });
@@ -65,24 +59,16 @@ exports.disapprove_task = async (req, res) => {
     }
 
     if (String(task.parent_id) !== String(parent._id)) {
-      return res
-        .status(403)
-        .json({ message: 'You are not allowed to disapprove this task' });
+      return res.status(403).json({ message: 'You are not allowed to disapprove this task' });
     }
 
-    const child = await childModel
-      .findById(task.child_id)
-      .select('_id user_id points')
-      .lean();
+    const child = await childModel.findById(task.child_id).select('_id user_id points').lean();
 
     if (!child) {
       return res.status(404).json({ message: 'child not found' });
     }
 
-    const childUser = await userModel
-      .findById(child.user_id)
-      .select('_id family_id')
-      .lean();
+    const childUser = await userModel.findById(child.user_id).select('_id family_id').lean();
 
     if (!childUser || !childUser.family_id) {
       return res.status(400).json({ message: 'Child is not linked to any family' });
@@ -91,9 +77,7 @@ exports.disapprove_task = async (req, res) => {
     const childFamilyId = childUser.family_id;
 
     if (String(parentFamilyId) !== String(childFamilyId)) {
-      return res
-        .status(403)
-        .json({ message: 'You are not allowed to disapprove this child task' });
+      return res.status(403).json({ message: 'You are not allowed to disapprove this child task' });
     }
 
     if (task.status === 'completed') {
@@ -109,23 +93,17 @@ exports.disapprove_task = async (req, res) => {
       .lean();
 
     if (!submission) {
-      return res
-        .status(400)
-        .json({ message: 'No submission found for this task to disapprove' });
+      return res.status(400).json({ message: 'No submission found for this task to disapprove' });
     }
 
     const updatedTask = await taskModel
       .findByIdAndUpdate(task._id, { status: 'Declined' }, { new: true })
       .lean();
 
-    const updatedChild = await childModel
-      .findById(child._id)
-      .select('_id user_id points')
-      .lean();
+    const updatedChild = await childModel.findById(child._id).select('_id user_id points').lean();
 
     return res.status(200).json({
       message: 'Task disapproved successfully',
-
     });
   } catch (error) {
     return res.status(500).json({

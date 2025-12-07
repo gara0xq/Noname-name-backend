@@ -28,30 +28,19 @@ exports.approve_task = async (req, res) => {
 
     let parent = null;
     if (parentId) {
-      parent = await parentModel
-        .findById(parentId)
-        .select('_id user_id')
-        .lean();
+      parent = await parentModel.findById(parentId).select('_id user_id').lean();
     }
     if (!parent && userId) {
-      parent = await parentModel
-        .findOne({ user_id: userId })
-        .select('_id user_id')
-        .lean();
+      parent = await parentModel.findOne({ user_id: userId }).select('_id user_id').lean();
     }
     if (!parent) {
       return res.status(404).json({ message: 'parent not found' });
     }
 
-    const parentUser = await userModel
-      .findById(parent.user_id)
-      .select('_id family_id')
-      .lean();
+    const parentUser = await userModel.findById(parent.user_id).select('_id family_id').lean();
 
     if (!parentUser || !parentUser.family_id) {
-      return res
-        .status(400)
-        .json({ message: 'Parent is not linked to any family' });
+      return res.status(400).json({ message: 'Parent is not linked to any family' });
     }
 
     const parentFamilyId = parentUser.family_id;
@@ -72,38 +61,25 @@ exports.approve_task = async (req, res) => {
     }
 
     if (String(task.parent_id) !== String(parent._id)) {
-      return res
-        .status(403)
-        .json({ message: 'You are not allowed to approve this task' });
+      return res.status(403).json({ message: 'You are not allowed to approve this task' });
     }
 
-
-    const child = await childModel
-      .findById(task.child_id)
-      .select('_id user_id points')
-      .lean();
+    const child = await childModel.findById(task.child_id).select('_id user_id points').lean();
 
     if (!child) {
       return res.status(404).json({ message: 'child not found' });
     }
 
-    const childUser = await userModel
-      .findById(child.user_id)
-      .select('_id family_id')
-      .lean();
+    const childUser = await userModel.findById(child.user_id).select('_id family_id').lean();
 
     if (!childUser || !childUser.family_id) {
-      return res
-        .status(400)
-        .json({ message: 'Child is not linked to any family' });
+      return res.status(400).json({ message: 'Child is not linked to any family' });
     }
 
     const childFamilyId = childUser.family_id;
 
     if (String(parentFamilyId) !== String(childFamilyId)) {
-      return res
-        .status(403)
-        .json({ message: 'You are not allowed to approve this child task' });
+      return res.status(403).json({ message: 'You are not allowed to approve this child task' });
     }
 
     if (task.status === 'completed') {
@@ -115,13 +91,11 @@ exports.approve_task = async (req, res) => {
 
     const submission = await submitModel
       .findOne({ task_id: task._id })
-      .sort({ submited_at: -1 }) 
+      .sort({ submited_at: -1 })
       .lean();
 
     if (!submission) {
-      return res
-        .status(400)
-        .json({ message: 'No submission found for this task to approve' });
+      return res.status(400).json({ message: 'No submission found for this task to approve' });
     }
 
     const existingApprovement = await approveModel
@@ -129,9 +103,7 @@ exports.approve_task = async (req, res) => {
       .lean();
 
     if (existingApprovement) {
-      return res
-        .status(400)
-        .json({ message: 'This submission is already approved' });
+      return res.status(400).json({ message: 'This submission is already approved' });
     }
 
     const redeemedPoints = Number(task.points) || 0;
@@ -142,29 +114,18 @@ exports.approve_task = async (req, res) => {
     });
 
     const updatedTask = await taskModel
-      .findByIdAndUpdate(
-        task._id,
-        { status: 'completed' }, 
-        { new: true }
-      )
+      .findByIdAndUpdate(task._id, { status: 'completed' }, { new: true })
       .lean();
 
     let updatedChild = await childModel
-      .findByIdAndUpdate(
-        child._id,
-        { $inc: { points: redeemedPoints } },
-        { new: true }
-      )
+      .findByIdAndUpdate(child._id, { $inc: { points: redeemedPoints } }, { new: true })
       .lean();
 
     return res.status(200).json({
       message: 'Task approved successfully',
-       
     });
   } catch (error) {
     console.error('approve_task error:', error);
-    return res
-      .status(500)
-      .json({ message: error.message || 'Internal server error' });
+    return res.status(500).json({ message: error.message || 'Internal server error' });
   }
 };

@@ -18,8 +18,8 @@ exports.deletereward = async (req, res) => {
     const parentUserId = decoded.userId;
     const familyId = decoded.familyId;
 
-    let rewardId  = req.params.id ;
-    console.log(rewardId)
+    let rewardId = req.params.id;
+    console.log(rewardId);
     if (!rewardId) return res.status(400).json({ message: 'rewardId is required' });
     rewardId = String(rewardId).trim();
 
@@ -30,9 +30,11 @@ exports.deletereward = async (req, res) => {
     if (!parentUser) return res.status(403).json({ message: 'Parent user not found' });
 
     if (String(parentUser.family_id) !== String(family._id)) {
-      return res.status(403).json({ message: 'You are not allowed to delete a reward from this family' });
+      return res
+        .status(403)
+        .json({ message: 'You are not allowed to delete a reward from this family' });
     }
-    console.log(rewardId)
+    console.log(rewardId);
 
     const existreward = await reward_model.findById(rewardId);
     if (!existreward) return res.status(404).json({ message: 'reward not found by rewardId' });
@@ -47,9 +49,10 @@ exports.deletereward = async (req, res) => {
 
       const currentChildUser = await userModel.findOne({
         family_id: familyId,
-        _id: child.user_id
+        _id: child.user_id,
       });
-      if (!currentChildUser) return res.status(404).json({ message: 'Child does not belong to this family' });
+      if (!currentChildUser)
+        return res.status(404).json({ message: 'Child does not belong to this family' });
     }
 
     const delRes = await reward_model.deleteOne({ _id: existreward._id });
@@ -59,7 +62,7 @@ exports.deletereward = async (req, res) => {
 
     return res.status(200).json({
       message: 'reward deleted successfully',
-      deleted: { rewardDeleted: delRes.deletedCount, reward_id: existreward._id }
+      deleted: { rewardDeleted: delRes.deletedCount, reward_id: existreward._id },
     });
   } catch (error) {
     console.error('deletereward error:', { message: error.message, stack: error.stack });

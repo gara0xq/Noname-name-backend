@@ -34,7 +34,9 @@ exports.deleteChild = async (req, res) => {
     if (!parentUser) return res.status(403).json({ message: 'Parent user not found' });
 
     if (String(parentUser.family_id) !== String(family._id)) {
-      return res.status(403).json({ message: 'You are not allowed to delete a child from this family' });
+      return res
+        .status(403)
+        .json({ message: 'You are not allowed to delete a child from this family' });
     }
 
     const existchild = await childModel.findOne({ code: code });
@@ -46,9 +48,10 @@ exports.deleteChild = async (req, res) => {
 
     const currentChildUser = await userModel.findOne({
       family_id: familyId,
-      _id: existchild.user_id
+      _id: existchild.user_id,
     });
-    if (!currentChildUser) return res.status(404).json({ message: 'Child does not belong to this family' });
+    if (!currentChildUser)
+      return res.status(404).json({ message: 'Child does not belong to this family' });
 
     const tasksDel = await tasks_model.deleteMany({ child_id: existchild._id });
     const userDel = await userModel.deleteOne({ _id: existchild.user_id });
@@ -59,7 +62,7 @@ exports.deleteChild = async (req, res) => {
     }
 
     return res.status(200).json({
-      message: 'Child deleted successfully'
+      message: 'Child deleted successfully',
     });
   } catch (error) {
     console.error('deleteChild error:', { message: error.message, stack: error.stack });
