@@ -39,18 +39,20 @@ router.post('/child/login',loginChildController.login)
 router.post('/parent/add_task',addTaskcontroller.addTask)
 router.post('/parent/addReward',addReward.addReward)
 router.post('/child/submit',submit_task_proof.submit_task_proof)
+router.post('/parent/approve/:id',approve_task.approve_task)
+router.post('/parent/reject_task/:id',disapprove_task.disapprove_task)
 
 // GET methode
 router.get('/parent/get_current', getUser.getCurrent);
 router.get('/parent/getChildren',getChildren.get_children)
 router.get('/child/getChild',getChild.get_child)
 router.get('/parent/getTasks',getTasksController.get_tasks)
-router.get('/parent/getCurrentTask',getTaskController.get_current_task)
+router.get('/parent/getCurrentTask/:id',getTaskController.get_current_task)
 router.get('/parent/getChildTasks',getChildTasksController.get_child_task)
 router.get('/parent/getReward',getReward.getReward)
 router.get('/child/getUserData',getUserData.getChildData)
 router.get('/child/get_my_tasks',get_my_tasks.get_my_tasks)
-router.get('/child/getCurrentTask',get_current_task.get_current_task)
+router.get('/child/getCurrentTask/:id',get_current_task.get_current_task)
 router.get('/child/getRewards',get_my_rewards.get_my_rewards)
 
 // PUT methode
@@ -58,14 +60,13 @@ router.put('/parent/updateUserPass',updateParentPassController.updatePass)
 router.put('/parent/updateFamilyTask',updateFamilyTask.updateFamilyTask)
 router.put('/parent/updateChild',updateChildController.updatedChild)
 router.put('/parent/updatedReward',updatedReward.updatedReward)
-router.put('/child/redeemedReward',redeem_my_rewards.redeem_my_rewards)
-router.put('/parent/approve',approve_task.approve_task)
-router.put('/parent/reject_task',disapprove_task.disapprove_task)
+router.put('/child/redeemedReward/:id',redeem_my_rewards.redeem_my_rewards)
+
 // DELETE methode
 router.delete('/parent/deleteChild',deleteChild.deleteChild)
-router.delete('/parent/deleteTask',deleteTask.deleteTask)
+router.delete('/parent/deleteTask/:id',deleteTask.deleteTask)
 router.delete('/parent/deleteFamily',deleteFamily.deleteFamily)
-router.delete('/parent/deleteReward',deleteReward.deletereward)
+router.delete('/parent/deleteReward/:id',deleteReward.deletereward)
 
 
 module.exports = router;

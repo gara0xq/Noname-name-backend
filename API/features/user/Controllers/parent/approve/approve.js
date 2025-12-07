@@ -56,7 +56,7 @@ exports.approve_task = async (req, res) => {
 
     const parentFamilyId = parentUser.family_id;
 
-    const { taskId } = req.body || {};
+    const { taskId } = req.params.id || {};
     if (!taskId || typeof taskId !== 'string' || !taskId.trim()) {
       return res.status(400).json({ message: 'taskId is required' });
     }

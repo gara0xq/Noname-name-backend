@@ -39,7 +39,7 @@ exports.redeem_my_rewards = async (req, res) => {
       return res.status(404).json({ message: 'child user not found' });
     }
 
-    const { rewardId } = req.body || {};
+    const { rewardId } = req.params.id || {};
     if (!rewardId || typeof rewardId !== 'string' || !rewardId.trim()) {
       return res.status(400).json({ message: 'rewardId is required' });
     }

@@ -18,7 +18,7 @@ exports.deleteTask = async (req, res) => {
     const parentUserId = decoded.userId;
     const familyId = decoded.familyId;
 
-    let { taskId } = req.body;
+    let taskId = req.params.id;
     if (!taskId) return res.status(400).json({ message: 'taskId is required' });
     taskId = String(taskId).trim();
 

@@ -29,7 +29,7 @@ exports.get_current_task = async (req, res) => {
     }
 
   
-    const { taskId } = req.body; 
+    const { taskId } = req.params.id; 
     if (!taskId) return res.status(400).json({ message: 'taskId is required' });
 
 

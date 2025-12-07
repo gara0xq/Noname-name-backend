@@ -18,7 +18,8 @@ exports.deletereward = async (req, res) => {
     const parentUserId = decoded.userId;
     const familyId = decoded.familyId;
 
-    let { rewardId } = req.body;
+    let rewardId  = req.params.id ;
+    console.log(rewardId)
     if (!rewardId) return res.status(400).json({ message: 'rewardId is required' });
     rewardId = String(rewardId).trim();
 

@@ -19,7 +19,7 @@ exports.addChild = async (req, res) => {
     let { name, gender, title , birthDate} = req.body;
     if (!name || !gender || !birthDate) {
       return res.status(400).json({
-        message: 'name and gender are required',
+        message: 'name and gender and birthDate are required',
       });
     }
 
