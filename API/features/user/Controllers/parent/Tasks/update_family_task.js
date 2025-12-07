@@ -1,4 +1,4 @@
-const verifyJwt = require('../../../../../config/jwt_token_for_parent');
+const auth = require('../../../../../utils/auth');
 const userModel = require('../../../models/user_model');
 const familyModel = require('../../../models/family_model');
 const parent_model = require('../../../models/parent_model');
@@ -7,11 +7,13 @@ const tasks_model = require('../../../models/tasks_model');
 
 exports.updateFamilyTask = async (req, res) => {
   try {
-    const authHeader = req.headers['authorization'] || req.headers['Authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.status(401).json({ message: 'Unauthorized' });
-
-    const decoded = await verifyJwt.verifyJwt(token);
+    let decoded;
+    try {
+      decoded = await auth.verifyParentToken(req);
+    } catch (err) {
+      console.error('updateFamilyTask auth error:', err);
+      return res.status(err.status || 401).json({ message: err.message || 'Invalid or expired token' });
+    }
 
     const parentUserId = decoded.userId;
     const familyId = decoded.familyId;
@@ -80,10 +82,8 @@ exports.updateFamilyTask = async (req, res) => {
       .status(200)
       .json({ message: 'task updated successfully', modifiedCount: updateResult.modifiedCount });
   } catch (error) {
-    console.error(error);
-    if (error && (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError')) {
-      return res.status(401).json({ message: 'Invalid or expired token' });
-    }
+    console.error('updateFamilyTask error:', error);
+    if (error && error.status) return res.status(error.status).json({ message: error.message });
     return res.status(500).json({ message: error.message || 'Internal server error' });
   }
 };

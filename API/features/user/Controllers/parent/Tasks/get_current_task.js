@@ -1,4 +1,4 @@
-const verifyJwt = require('../../../../../config/jwt_token_for_parent');
+const auth = require('../../../../../utils/auth');
 const userModel = require('../../../models/user_model');
 const familyModel = require('../../../models/family_model');
 const childModel = require('../../../models/child_model');
@@ -8,11 +8,13 @@ require('dotenv').config();
 
 exports.get_current_task = async (req, res) => {
   try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.sendStatus(401);
-
-    const decoded = await verifyJwt.verifyJwt(token);
+    let decoded;
+    try {
+      decoded = await auth.verifyParentToken(req);
+    } catch (err) {
+      console.error('get_current_task auth error:', err);
+      return res.status(err.status || 401).json({ message: err.message || 'Invalid or expired token' });
+    }
 
     const parentUserId = decoded.userId;
     const familyId = decoded.familyId;
@@ -29,7 +31,7 @@ exports.get_current_task = async (req, res) => {
         .json({ message: 'You are not allowed to access this family resources' });
     }
 
-    const { taskId } = req.params.id;
+    const taskId = req.params.id;
     if (!taskId) return res.status(400).json({ message: 'taskId is required' });
 
     const taskResult = await fetchTaskById(taskId);
@@ -40,10 +42,8 @@ exports.get_current_task = async (req, res) => {
       task: taskResult,
     });
   } catch (error) {
-    console.error(error);
-    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
-      return res.status(401).json({ message: 'Invalid or expired token' });
-    }
+    console.error('get_current_task error:', error);
+    if (error && error.status) return res.status(error.status).json({ message: error.message });
     return res.status(500).json({ message: error.message || 'Internal server error' });
   }
 };
@@ -51,12 +51,13 @@ exports.get_current_task = async (req, res) => {
 async function fetchTaskById(taskId) {
   const task = await taskModel.findById(taskId);
   if (!task) return null;
-  const childName = await getNameById(task.child_id);
+  const childHelpers = require('../../../../../utils/childHelpers');
+  const childName = await childHelpers.getNameById(task.child_id);
   const existSubmition = await submit_model.findOne({ task_id: taskId });
   let pic, submitDate;
 
   if (existSubmition) {
-    ((pic = existSubmition.proof_image_url), (submitDate = existSubmition.submited_at));
+    ((pic = existSubmition.proof_image_url), (submitDate = existSubmition.submitted_at));
   }
 
   return {
@@ -74,9 +75,4 @@ async function fetchTaskById(taskId) {
   };
 }
 
-async function getNameById(child_id) {
-  if (!child_id) return null;
-  const child = await childModel.findById(child_id).populate('user_id', 'name');
-  if (!child || !child.user_id) return null;
-  return child.user_id.name;
-}
+// getNameById moved to `API/utils/childHelpers.js`

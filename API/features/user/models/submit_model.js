@@ -12,7 +12,7 @@ const submitSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    submited_at: {
+    submitted_at: {
       type: Date,
       default: Date.now,
     },

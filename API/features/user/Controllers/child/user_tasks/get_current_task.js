@@ -1,21 +1,18 @@
 // controllers/child/get_current_task.js
-const jwtUtil = require('../../../../../config/jwt_token_for_child');
+const auth = require('../../../../../utils/auth');
+const taskHelpers = require('../../../../../utils/taskHelpers');
 const childModel = require('../../../models/child_model');
 const taskModel = require('../../../models/tasks_model');
 require('dotenv').config();
 
 exports.get_current_task = async (req, res) => {
   try {
-    // Extract token
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.status(401).json({ message: 'token not found' });
-
     let decoded;
     try {
-      decoded = await jwtUtil.verifyJwt(token);
+      decoded = await auth.verifyChildToken(req);
     } catch (err) {
-      return res.status(401).json({ message: 'Invalid or expired token' });
+      console.error('get_current_task auth error:', err);
+      return res.status(err.status || 401).json({ message: err.message || 'Invalid or expired token' });
     }
 
     const { role, childId, userId } = decoded;
@@ -46,7 +43,7 @@ exports.get_current_task = async (req, res) => {
       return res.status(400).json({ message: 'taskId is required' });
     }
 
-    const task = await fetchTaskByIdForChild(taskId, existingChild._id);
+    const task = await taskHelpers.fetchTaskByIdForChild(taskId, existingChild._id);
     if (!task) {
       return res.status(404).json({ message: 'Task not found or not yours' });
     }
@@ -59,36 +56,9 @@ exports.get_current_task = async (req, res) => {
     });
   } catch (error) {
     console.error('get_current_task error:', error);
-    return res.status(500).json({
-      message: error.message || 'Internal server error',
-    });
+    if (error && error.status) return res.status(error.status).json({ message: error.message });
+    return res.status(500).json({ message: error.message || 'Internal server error' });
   }
 };
 
-async function fetchTaskByIdForChild(taskId, childAllowedId, res) {
-  const task = await taskModel.findById(taskId).lean();
-  if (!task) return null;
-
-  const now = new Date();
-  const expireDate = task.expire_date ? new Date(task.expire_date) : null;
-
-  if (expireDate && expireDate < now && task.status !== 'completed') {
-    try {
-      await taskModel.findByIdAndUpdate(task._id, { status: 'expired' });
-    } catch (err) {
-      console.error('Failed to update task status to expired:', err);
-    }
-    return { expired: true };
-  }
-
-  return {
-    id: task._id,
-    title: task.title,
-    description: task.description,
-    punishment: task.punishment,
-    points: task.points,
-    status: task.status,
-    expire_date: task.expire_date,
-    created_at: task.created_at,
-  };
-}
+// fetchTaskByIdForChild moved to `API/utils/taskHelpers.js`

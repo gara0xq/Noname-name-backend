@@ -1,4 +1,4 @@
-const verifyJwt = require('../../../../../config/jwt_token_for_parent');
+const auth = require('../../../../../utils/auth');
 const family_model = require('../../../models/family_model');
 const parent_model = require('../../../models/parent_model');
 const permissions_model = require('../../../models/permissions_model');
@@ -14,16 +14,12 @@ exports.deleteFamily = async (req, res) => {
   let session;
 
   try {
-    const authheader = req.headers['authorization'];
-    const token = authheader && authheader.split(' ')[1];
-
-    if (!token) {
-      return res.status(401).json({ message: 'No token provided' });
-    }
-
-    const decoded = await verifyJwt.verifyJwt(token);
-    if (!decoded || !decoded.userId || !decoded.familyId || !decoded.parentId || !decoded.role) {
-      return res.status(400).json({ message: 'problem with token function' });
+    let decoded;
+    try {
+      decoded = await auth.verifyParentToken(req);
+    } catch (err) {
+      console.error('deleteFamily auth error:', err);
+      return res.status(err.status || 401).json({ message: err.message || 'Invalid or expired token' });
     }
 
     const userId = decoded.userId;
@@ -43,7 +39,7 @@ exports.deleteFamily = async (req, res) => {
 
     const existpermission = await permissions_model.findById(existuser.permissions_id);
     if (!existpermission) return res.status(404).json({ message: 'no such permission' });
-    if (existpermission.title !== role) {
+    if (String(existpermission.title).toLowerCase() !== String(role).toLowerCase()) {
       return res.status(403).json({ message: "user isn't parent" });
     }
 
@@ -54,7 +50,8 @@ exports.deleteFamily = async (req, res) => {
       return res.status(403).json({ message: "user isn't in the family" });
     }
 
-    session = await mongoose.startSession();
+
+    session = await parent_model.db.startSession();
     session.startTransaction();
 
     try {
@@ -106,9 +103,6 @@ exports.deleteFamily = async (req, res) => {
         await user_model.deleteMany({ _id: { $in: userIds } }, { session });
       }
 
-      if (permissionIds.length > 0) {
-        await permissions_model.deleteMany({ _id: { $in: permissionIds } }, { session });
-      }
 
       const deletedFamily = await family_model.findByIdAndDelete(familyId).session(session);
 

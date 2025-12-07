@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const jwtUtil = require('../../../../../config/jwt_token_for_child');
+const auth = require('../../../../../utils/auth');
 const childModel = require('../../../models/child_model');
 const taskModel = require('../../../models/tasks_model');
 const submitModel = require('../../../models/submit_model');
@@ -7,16 +7,12 @@ require('dotenv').config();
 
 exports.submit_task_proof = async (req, res) => {
   try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.status(401).json({ message: 'No token provided' });
-
     let decoded;
     try {
-      decoded = await jwtUtil.verifyJwt(token);
+      decoded = await auth.verifyChildToken(req);
     } catch (err) {
-      console.error('Token verify failed:', err);
-      return res.status(401).json({ message: 'Invalid or expired token' });
+      console.error('submit_task_proof auth error:', err);
+      return res.status(err.status || 401).json({ message: err.message || 'Invalid or expired token' });
     }
 
     const { role, childId, userId } = decoded;
@@ -89,7 +85,7 @@ exports.submit_task_proof = async (req, res) => {
       task_id: tid,
       child_id: existingChild._id,
       proof_image_url: imageUrl,
-      submited_at: new Date(),
+      submitted_at: new Date(),
     });
 
     const updatedTask = await taskModel
@@ -107,6 +103,7 @@ exports.submit_task_proof = async (req, res) => {
     });
   } catch (error) {
     console.error('submit_task_proof error:', error);
+    if (error && error.status) return res.status(error.status).json({ message: error.message });
     return res.status(500).json({ message: error.message || 'Internal server error' });
   }
 };

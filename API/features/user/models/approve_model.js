@@ -2,17 +2,17 @@ const mongoose = require('mongoose');
 
 const approveSchema = new mongoose.Schema(
   {
-    task_submition_id: {
+    task_submission_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'submit',
       required: true,
     },
 
-    submited_at: {
+    submitted_at: {
       type: Date,
       default: Date.now,
     },
-    redeemed_point: {
+    redeemed_points: {
       type: Number,
     },
   },

@@ -15,16 +15,26 @@ exports.login = async (req, res) => {
     const existingParent = await parentModel.findOne({ email: email.toLowerCase().trim() });
 
     if (!existingParent) {
-      return res.status(409).json({ massege: 'Email Not found' });
+      return res.status(404).json({ message: 'Email not found' });
     }
 
     const match = await bcrypt.compare(password, existingParent.password);
     if (!match) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
-    const existinguser = await userModel.findOne(existingParent.user_id);
+    // find the associated user by id (use findById rather than findOne with an id)
+    const existinguser = await userModel.findById(existingParent.user_id);
+    if (!existinguser) {
+      return res.status(404).json({ message: 'Associated user not found' });
+    }
 
-    const existpermission = await permissionsModel.findOne(existinguser.permissions_id);
+    // find permission document by id and guard against missing permissions
+    const existpermission = existinguser.permissions_id
+      ? await permissionsModel.findById(existinguser.permissions_id)
+      : null;
+    if (!existpermission) {
+      return res.status(404).json({ message: 'Permission not found for user' });
+    }
     const token = await jwtSign.signJwt(existingParent, existinguser, existpermission);
     if (!token) return res.status(400).json({ message: 'problem with token creation' });
 
@@ -32,7 +42,7 @@ exports.login = async (req, res) => {
       token: token,
     });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({ massege: 'something went wrong' });
+    console.error('parent_login error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 };

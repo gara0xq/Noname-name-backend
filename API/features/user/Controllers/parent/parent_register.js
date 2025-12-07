@@ -2,26 +2,37 @@ const userModel = require('../../models/user_model');
 const parentModel = require('../../models/parent_model');
 const familyModel = require('../../models/family_model');
 const bcrypt = require('bcryptjs');
+const isValidPhoneNumber = require('../../../../utils/phone_validation')
+const checkFamilyCode = require('../../../../utils/family_code')
 const permissionsModel = require('../../models/permissions_model');
 
 exports.register = async (req, res) => {
   try {
     let { name, email, password, phone_number, family_code, title } = req.body;
+    if(!title || title.trim() === '') {
+      title = 'parent';
+    }
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: 'name, email, password are required' });
+    if (!name || !email || !password || !phone_number) {
+      return res.status(400).json({ message: 'phone number,name, email, password are required' });
+    }
+
+    if (phone_number && !isValidPhoneNumber.isValidPhone(phone_number)) {
+      return res
+        .status(400)
+        .json({ message: 'Invalid phone number format' });
     }
 
     // check family code if not exist generateUniqueFamilyCode()
     if (family_code == null) {
-      family_code = await generateUniqueFamilyCode();
+      family_code = await checkFamilyCode.generateUniqueFamilyCode();
     }
-    let family = await checkFamilyCode(family_code);
+    let family = await checkFamilyCode.checkFamilyCode(family_code);
 
     // check email
     const existingParent = await parentModel.findOne({ email: email.toLowerCase().trim() });
     if (existingParent) {
-      return res.status(409).json({ massege: 'Email already in use' });
+      return res.status(409).json({ message: 'Email already in use' });
     }
 
     // find family OR create one
@@ -61,29 +72,6 @@ exports.register = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ massege: error });
+    return res.status(500).json({ message: error });
   }
 };
-
-// custoum functions
-
-async function generateUniqueFamilyCode(maxAttempts = 20) {
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const exists = await familyModel.findOne({ code });
-    if (!exists) return code;
-  }
-  return false;
-}
-
-async function checkFamilyCode(code) {
-  if (code) {
-    const family = await familyModel.findOne({ code: code });
-
-    if (!family) {
-      return null;
-    }
-
-    return family;
-  }
-}

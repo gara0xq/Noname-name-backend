@@ -1,17 +1,21 @@
-const verifyJwt = require('../../../../../config/jwt_token_for_parent');
+const auth = require('../../../../../utils/auth');
 const userModel = require('../../../models/user_model');
 const familyModel = require('../../../models/family_model');
 const parent_model = require('../../../models/parent_model');
 const taskModel = require('../../../models/tasks_model');
 const childModel = require('../../../models/child_model');
+const taskHelpers = require('../../../../../utils/taskHelpers');
+const childHelpers = require('../../../../../utils/childHelpers');
 
 exports.get_tasks = async (req, res) => {
   try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.status(401).json({ message: 'Unauthorized' });
-
-    const decoded = await verifyJwt.verifyJwt(token);
+    let decoded;
+    try {
+      decoded = await auth.verifyParentToken(req);
+    } catch (err) {
+      console.error('get_tasks auth error:', err);
+      return res.status(err.status || 401).json({ message: err.message || 'Invalid or expired token' });
+    }
 
     const parentUserId = decoded.userId;
     const familyId = decoded.familyId;
@@ -39,13 +43,12 @@ exports.get_tasks = async (req, res) => {
       tasks,
     });
   } catch (error) {
+    console.error('get_tasks error:', error);
     if (error && error.code === 'NO_PARENT') {
       return res.status(404).json({ message: 'Parent not found' });
     }
-    if (error && (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError')) {
-      return res.status(401).json({ message: 'Invalid or expired token' });
-    }
-    return res.status(500).json({ message: error.message });
+    if (error && error.status) return res.status(error.status).json({ message: error.message });
+    return res.status(500).json({ message: error.message || 'Internal server error' });
   }
 };
 
@@ -66,9 +69,9 @@ async function fetchAlltasks(parentId) {
 
   const mapped = [];
   for (const t of taskss) {
-    const finalStatus = await updateTaskIfExpired(t);
+    const finalStatus = await taskHelpers.updateTaskIfExpired(t);
 
-    const name = await getNameById(t.child_id);
+    const name = await childHelpers.getNameById(t.child_id);
 
     mapped.push({
       id: t._id,
@@ -83,24 +86,5 @@ async function fetchAlltasks(parentId) {
   return mapped;
 }
 
-async function getNameById(child_id) {
-  if (!child_id) return null;
-  const child = await childModel.findById(child_id).populate('user_id', 'name');
-  if (!child || !child.user_id) return null;
-  return child.user_id.name;
-}
-async function updateTaskIfExpired(task) {
-  const now = new Date();
-  const expireDate = new Date(task.expire_date);
-
-  if (task.status === 'submitted') {
-    return 'submitted';
-  }
-
-  if (expireDate < now && task.status !== 'completed') {
-    await taskModel.findByIdAndUpdate(task._id, { status: 'expired' });
-    return 'expired';
-  }
-
-  return task.status;
-}
+// child name helper moved to `API/utils/childHelpers.js`
+// updateTaskIfExpired moved to `API/utils/taskHelpers.js`

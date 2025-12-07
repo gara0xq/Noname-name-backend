@@ -1,7 +1,6 @@
-const Module = require('module');
 const mongoose = require('mongoose');
 
-const parentSchhema = new mongoose.Schema(
+const parentSchema = new mongoose.Schema(
   {
     user_id: {
       type: mongoose.Schema.ObjectId,
@@ -35,4 +34,4 @@ const parentSchhema = new mongoose.Schema(
     versionKey: false,
   }
 );
-module.exports = mongoose.model('parents', parentSchhema);
+module.exports = mongoose.model('parents', parentSchema);

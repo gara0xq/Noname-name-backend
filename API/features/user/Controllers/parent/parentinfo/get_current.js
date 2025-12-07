@@ -1,22 +1,17 @@
-const verifyJwt = require('../../../../../config/jwt_token_for_parent');
+const auth = require('../../../../../utils/auth');
 const parentModel = require('../../../models/parent_model');
 const userModel = require('../../../models/user_model');
 const familyModel = require('../../../models/family_model');
 
 exports.getCurrent = async (req, res) => {
   try {
-    const authheader = req.headers['authorization'];
-    const token = authheader && authheader.split(' ')[1];
-
-    if (token == null) {
-      return res.status(401).json({
-        status: false,
-        message: 'No token provided',
-      });
+    let decoded;
+    try {
+      decoded = await auth.verifyParentToken(req);
+    } catch (err) {
+      console.error('getCurrent auth error:', err);
+      return res.status(err.status || 401).json({ status: false, message: err.message || 'No token provided' });
     }
-
-    // verify token
-    const decoded = await verifyJwt.verifyJwt(token);
 
     const user_id = decoded.userId;
 
@@ -38,11 +33,8 @@ exports.getCurrent = async (req, res) => {
       family_code: existingFamily.code,
     });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      status: false,
-      message: 'Something went wrong',
-      error: error.message,
-    });
+    console.error('getCurrent error:', error);
+    if (error && error.status) return res.status(error.status).json({ status: false, message: error.message });
+    return res.status(500).json({ status: false, message: 'Something went wrong', error: error.message });
   }
 };

@@ -1,4 +1,4 @@
-const jwtUtil = require('../../../../../config/jwt_token_for_parent');
+const auth = require('../../../../../utils/auth');
 const userModel = require('../../../models/user_model');
 const parentModel = require('../../../models/parent_model');
 const childModel = require('../../../models/child_model');
@@ -9,16 +9,12 @@ require('dotenv').config();
 
 exports.approve_task = async (req, res) => {
   try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.status(401).json({ message: 'No token provided' });
-
     let decoded;
     try {
-      decoded = await jwtUtil.verifyJwt(token);
+      decoded = await auth.verifyParentToken(req);
     } catch (err) {
-      console.error('Token verify failed:', err);
-      return res.status(401).json({ message: 'Invalid or expired token' });
+      console.error('approve_task auth error:', err);
+      return res.status(err.status || 401).json({ message: err.message || 'Invalid or expired token' });
     }
 
     const { role, parentId, userId } = decoded || {};
@@ -45,7 +41,7 @@ exports.approve_task = async (req, res) => {
 
     const parentFamilyId = parentUser.family_id;
 
-    const { taskId } = req.params.id || {};
+    const { taskId } = req.body || {};
     if (!taskId || typeof taskId !== 'string' || !taskId.trim()) {
       return res.status(400).json({ message: 'taskId is required' });
     }
@@ -91,7 +87,7 @@ exports.approve_task = async (req, res) => {
 
     const submission = await submitModel
       .findOne({ task_id: task._id })
-      .sort({ submited_at: -1 })
+      .sort({ submitted_at: -1 })
       .lean();
 
     if (!submission) {
@@ -99,7 +95,7 @@ exports.approve_task = async (req, res) => {
     }
 
     const existingApprovement = await approveModel
-      .findOne({ task_submition_id: submission._id })
+      .findOne({ task_submission_id: submission._id })
       .lean();
 
     if (existingApprovement) {
@@ -109,8 +105,9 @@ exports.approve_task = async (req, res) => {
     const redeemedPoints = Number(task.points) || 0;
 
     const approvement = await approveModel.create({
-      task_submition_id: submission._id,
-      redeemed_point: redeemedPoints,
+      task_submission_id: submission._id,
+      redeemed_points: redeemedPoints,
+      submitted_at: new Date(),
     });
 
     const updatedTask = await taskModel
@@ -126,6 +123,7 @@ exports.approve_task = async (req, res) => {
     });
   } catch (error) {
     console.error('approve_task error:', error);
+    if (error && error.status) return res.status(error.status).json({ message: error.message });
     return res.status(500).json({ message: error.message || 'Internal server error' });
   }
 };

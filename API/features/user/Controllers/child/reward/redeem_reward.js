@@ -1,4 +1,4 @@
-const jwtUtil = require('../../../../../config/jwt_token_for_child');
+const auth = require('../../../../../utils/auth');
 const childModel = require('../../../models/child_model');
 const rewardModel = require('../../../models/reward_model');
 const userModel = require('../../../models/user_model');
@@ -6,16 +6,12 @@ require('dotenv').config();
 
 exports.redeem_my_rewards = async (req, res) => {
   try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.status(401).json({ message: 'No token provided' });
-
     let decoded;
     try {
-      decoded = await jwtUtil.verifyJwt(token);
+      decoded = await auth.verifyChildToken(req);
     } catch (err) {
-      console.error('Token verify failed:', err);
-      return res.status(401).json({ message: 'Invalid or expired token' });
+      console.error('redeem_my_rewards auth error:', err);
+      return res.status(err.status || 401).json({ message: err.message || 'Invalid or expired token' });
     }
 
     const { role, childId, userId } = decoded;
@@ -45,7 +41,7 @@ exports.redeem_my_rewards = async (req, res) => {
       return res.status(404).json({ message: 'child user not found' });
     }
 
-    const { rewardId } = req.params.id || {};
+    const rewardId = req.params.id || {};
     if (!rewardId || typeof rewardId !== 'string' || !rewardId.trim()) {
       return res.status(400).json({ message: 'rewardId is required' });
     }
@@ -93,6 +89,7 @@ exports.redeem_my_rewards = async (req, res) => {
     });
   } catch (error) {
     console.error('redeem_my_rewards error:', error);
+    if (error && error.status) return res.status(error.status).json({ message: error.message });
     return res.status(500).json({ message: error.message || 'Internal server error' });
   }
 };

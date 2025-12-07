@@ -1,4 +1,4 @@
-const verifyJwt = require('../../../../../config/jwt_token_for_parent');
+const auth = require('../../../../../utils/auth');
 const userModel = require('../../../models/user_model');
 const familyModel = require('../../../models/family_model');
 const rewardModel = require('../../../models/reward_model');
@@ -6,16 +6,12 @@ const childModel = require('../../../models/child_model');
 
 exports.addReward = async (req, res) => {
   try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.status(401).json({ message: 'No token provided' });
-
     let decoded;
     try {
-      decoded = await verifyJwt.verifyJwt(token);
+      decoded = await auth.verifyParentToken(req);
     } catch (err) {
-      console.error('Token verify failed:', err);
-      return res.status(401).json({ message: 'Invalid or expired token' });
+      console.error('addReward auth error:', err);
+      return res.status(err.status || 401).json({ message: err.message || 'Invalid or expired token' });
     }
 
     if (!decoded || !decoded.userId || !decoded.familyId) {
@@ -96,8 +92,7 @@ exports.addReward = async (req, res) => {
     });
   } catch (error) {
     console.error('addReward error:', error);
-    return res.status(500).json({
-      message: error.message || 'Internal server error',
-    });
+    if (error && error.status) return res.status(error.status).json({ message: error.message });
+    return res.status(500).json({ message: error.message || 'Internal server error' });
   }
 };

@@ -1,4 +1,4 @@
-const verifyJwt = require('../../../../../config/jwt_token_for_parent');
+const auth = require('../../../../../utils/auth');
 const userModel = require('../../../models/user_model');
 const permissionsModel = require('../../../models/permissions_model');
 const familyModel = require('../../../models/family_model');
@@ -7,11 +7,13 @@ const reward_model = require('../../../models/reward_model');
 
 exports.updatedReward = async (req, res) => {
   try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.sendStatus(401);
-
-    const decoded = await verifyJwt.verifyJwt(token);
+    let decoded;
+    try {
+      decoded = await auth.verifyParentToken(req);
+    } catch (err) {
+      console.error('updatedReward auth error:', err);
+      return res.status(err.status || 401).json({ message: err.message || 'Invalid or expired token' });
+    }
 
     const parentUserId = decoded.userId;
     const familyId = decoded.familyId;
@@ -55,9 +57,7 @@ exports.updatedReward = async (req, res) => {
     if (!parentUser) return res.status(403).json({ message: 'Parent user not found' });
 
     if (String(parentUser.family_id) !== String(family._id)) {
-      return res.status(403).json({
-        message: 'You are not allowed to update a rewards to this family',
-      });
+      return res.status(403).json({ message: 'You are not allowed to update a rewards to this family' });
     }
 
     const existReward = await reward_model.findById(rewardId);
@@ -105,9 +105,8 @@ exports.updatedReward = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      message: error.message || 'Internal server error',
-    });
+    console.error('updatedReward error:', error);
+    if (error && error.status) return res.status(error.status).json({ message: error.message });
+    return res.status(500).json({ message: error.message || 'Internal server error' });
   }
 };
