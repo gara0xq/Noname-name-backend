@@ -32,7 +32,7 @@ async function fetchChildren(familyId, permissionTitle = 'child') {
 
   const resultChildren = [];
 
-  // reuse task helpers lazily to avoid circular require issues
+  
   const { fetchTaskStatusByChildId } = require('./taskHelpers');
 
   for (const child of children) {

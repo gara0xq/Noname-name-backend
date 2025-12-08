@@ -92,7 +92,7 @@ exports.submit_task_proof = async (req, res) => {
       .findByIdAndUpdate(
         tid,
         { status: 'submitted' },
-        { new: true } // <- MUST BE HERE
+        { new: true } 
       )
       .lean();
 

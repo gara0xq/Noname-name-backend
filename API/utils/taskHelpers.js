@@ -14,7 +14,7 @@ async function updateTaskIfExpired(task) {
     try {
       await taskModel.findByIdAndUpdate(task._id, { status: 'expired' });
     } catch (err) {
-      // preserve original behaviour: log and continue
+      
       console.error('taskHelpers.updateTaskIfExpired failed:', err);
     }
     return 'expired';

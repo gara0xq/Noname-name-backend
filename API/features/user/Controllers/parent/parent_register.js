@@ -13,7 +13,7 @@ exports.register = async (req, res) => {
       title = 'parent';
     }
 
-    if (!name || !email || !password || !phone_number) {
+    if (!name || !email || !password ) {
       return res.status(400).json({ message: 'phone number,name, email, password are required' });
     }
 
@@ -23,31 +23,31 @@ exports.register = async (req, res) => {
         .json({ message: 'Invalid phone number format' });
     }
 
-    // check family code if not exist generateUniqueFamilyCode()
-    if (family_code == null) {
+    
+    if (String(family_code) === 'undefined' || !family_code || family_code.trim() === '') {
       family_code = await checkFamilyCode.generateUniqueFamilyCode();
     }
     let family = await checkFamilyCode.checkFamilyCode(family_code);
 
-    // check email
+    
     const existingParent = await parentModel.findOne({ email: email.toLowerCase().trim() });
     if (existingParent) {
       return res.status(409).json({ message: 'Email already in use' });
     }
 
-    // find family OR create one
+    
     if (!family) {
       family = await familyModel.create({ code: family_code });
     }
 
-    // permission
+    
     let permission = await permissionsModel.findOne({ title: title });
 
     if (!permission) {
       permission = await permissionsModel.create({ title: title });
     }
 
-    // create user
+    
     const newuser = await userModel.create({
       name: name,
       family_id: family._id,
@@ -55,10 +55,10 @@ exports.register = async (req, res) => {
       created_at: new Date(),
     });
 
-    // hash pass
+    
     const hashed_pass = await bcrypt.hash(password, 10);
 
-    // create parent
+    
     await parentModel.create({
       user_id: newuser._id,
       email: email.toLowerCase(),
@@ -66,7 +66,7 @@ exports.register = async (req, res) => {
       phone_number: phone_number,
     });
 
-    // response
+    
     return res.status(201).json({
       message: 'Parent registered successfully',
     });

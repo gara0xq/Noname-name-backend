@@ -22,13 +22,13 @@ exports.login = async (req, res) => {
     if (!match) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
-    // find the associated user by id (use findById rather than findOne with an id)
+    
     const existinguser = await userModel.findById(existingParent.user_id);
     if (!existinguser) {
       return res.status(404).json({ message: 'Associated user not found' });
     }
 
-    // find permission document by id and guard against missing permissions
+    
     const existpermission = existinguser.permissions_id
       ? await permissionsModel.findById(existinguser.permissions_id)
       : null;

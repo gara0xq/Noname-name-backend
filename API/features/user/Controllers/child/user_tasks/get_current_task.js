@@ -1,4 +1,4 @@
-// controllers/child/get_current_task.js
+
 const auth = require('../../../../../utils/auth');
 const taskHelpers = require('../../../../../utils/taskHelpers');
 const childModel = require('../../../models/child_model');
@@ -61,4 +61,4 @@ exports.get_current_task = async (req, res) => {
   }
 };
 
-// fetchTaskByIdForChild moved to `API/utils/taskHelpers.js`
+
