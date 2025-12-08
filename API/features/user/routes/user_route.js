@@ -11,7 +11,9 @@ const parentRegisterController = require('../Controllers/parent/parent_register'
 const parentGetCurrentController = require('../Controllers/parent/parentinfo/get_current');
 const parentUpdatePasswordController = require('../Controllers/parent/parentinfo/update_password');
 const deleteFamilyController = require('../Controllers/parent/parentinfo/delete_family');
-const forget_password = require('../Controllers/parent/forget_password');
+const forget_password = require('../Controllers/parent/forgetPassword/forget_password');
+const verify_code = require('../Controllers/parent/forgetPassword/verify_code');
+const change_password = require('../Controllers/parent/forgetPassword/change_password');
 
 
 const addChildController = require('../../user/Controllers/parent/childMethods/add_child');
@@ -55,9 +57,13 @@ const submitTaskProofController = require('../Controllers/child/submit_task/subm
 
 
 
+
 router.post('/parent/login', parentLoginController.login);
 router.post('/parent/register', parentRegisterController.register);
 router.post('/parent/forget-password', forget_password.forgetPassword);
+router.post('/parent/verify-otp', verify_code.verifyOtp);
+router.put('/parent/change-password', change_password.updatePass);
+
 
 
 

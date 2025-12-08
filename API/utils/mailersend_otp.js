@@ -1,4 +1,3 @@
-// utils/mailersend_otp.js
 const https = require('https');
 require('dotenv').config();
 
@@ -87,7 +86,6 @@ async function sendOtpEmail({ toEmail, otp, subject, name } = {}) {
   const fromName = getFromName();
   const supportEmail = getSupportEmail();
 
-  // your template id from MailerSend
   const templateId =
     process.env.MAILERSEND_TEMPLATE_FORGOT_PASSWORD || '3zxk54vqv1qljy6v';
 
