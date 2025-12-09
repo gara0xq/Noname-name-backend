@@ -28,6 +28,7 @@ exports.register = async (req, res) => {
       family_code = await checkFamilyCode.generateUniqueFamilyCode();
     }
     let family = await checkFamilyCode.checkFamilyCode(family_code);
+    
 
     
     const existingParent = await parentModel.findOne({ email: email.toLowerCase().trim() });
@@ -37,7 +38,7 @@ exports.register = async (req, res) => {
 
     
     if (!family) {
-      family = await familyModel.create({ code: family_code });
+     return res.status(401).json({ message: 'Invalid family code' });
     }
 
     

@@ -104,6 +104,8 @@ async function fetchTaskByChildId(childId) {
   const mapped = [];
   for (const t of tasks) {
     const finalStatus = await updateTaskIfExpired(t);
+     if(t.status == "completed" || t.status == "Declined")
+      continue
 
     mapped.push({
       id: t._id,
@@ -139,12 +141,14 @@ async function fetchTaskByChildCode(childcode, familyId) {
     return child.user_id.name;
   })(existchild._id);
 
-  const tasks = await taskModel.find({ child_id: existchild._id }).sort({ created_at: -1 }).lean();
+  const tasks = await taskModel.find({ child_id: existchild._id }).lean();
   if (!tasks || tasks.length === 0) return [];
 
   const mapped = [];
   for (const t of tasks) {
     const finalStatus = await updateTaskIfExpired(t);
+       if(t.status == "completed" || t.status == "Declined")
+      continue
 
     mapped.push({
       id: t._id,

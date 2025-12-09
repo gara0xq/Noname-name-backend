@@ -33,10 +33,10 @@ exports.get_tasks = async (req, res) => {
 
     const tasks = await fetchAlltasks(parentId);
 
-    if (!tasks) return res.status(404).json({ message: 'Parent not found' });
-    if (Array.isArray(tasks) && tasks.length === 0) {
-      return res.status(200).json({ message: 'there is no tasks', tasks: [] });
-    }
+    if (!tasks) return res.status(404).json({ message: 'there is no tasks' , tasks: [] });
+    // if (Array.isArray(tasks) && tasks.length === 0 && tasks ==[]) {
+    //   return res.status(200).json({ message: 'there is no tasks', tasks: [] });
+    // }
 
     return res.status(200).json({
       message: 'tasks fetched successfully',
@@ -72,6 +72,9 @@ async function fetchAlltasks(parentId) {
     const finalStatus = await taskHelpers.updateTaskIfExpired(t);
 
     const name = await childHelpers.getNameById(t.child_id);
+    
+    if(t.status == "completed" || t.status == "Declined")
+      continue
 
     mapped.push({
       id: t._id,
