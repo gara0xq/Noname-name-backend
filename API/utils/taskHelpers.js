@@ -1,6 +1,8 @@
 const childModel = require('../features/user/models/child_model');
 const taskModel = require('../features/user/models/tasks_model');
 const userModel = require('../features/user/models/user_model');
+const submittedTaskModel = require('../features/user/models/submit_model');
+const approveModel = require('../features/user/models/approve_model');
 
 async function updateTaskIfExpired(task) {
   const now = new Date();
@@ -196,10 +198,61 @@ async function fetchTaskByIdForChild(taskId, childAllowedId) {
   };
 }
 
+async function deleteTaskIfApprovedExpired(taskId) {
+  try {
+
+    const submission = await submittedTaskModel.findOne({ task_id: taskId });
+    if (!submission) return; 
+
+
+    const approval = await approveModel.findOne({ task_submission_id: submission._id });
+    if (!approval || !approval.submitted_at) return;
+
+    const expireDate = new Date(
+      approval.submitted_at.getTime() + 5 * 24 * 60 * 60 * 1000
+    );
+
+    if (expireDate <= new Date()) {
+      await Approve.deleteOne({ _id: approval._id });
+      await Submit.deleteOne({ _id: submission._id });
+      await Task.deleteOne({ _id: taskId });
+    }
+  } catch (err) {
+    console.error('taskHelpers.deleteTaskIfApprovedExpired failed:', err);
+  }
+}
+
+
+  async function deleteTaskIfstatusExpired(taskId) {
+  try {
+
+    const submission = await submittedTaskModel.findOne({ task_id: taskId });
+    if (!submission) return; 
+
+
+    const approval = await approveModel.findOne({ task_submission_id: submission._id });
+    if (!approval || !approval.submitted_at) return;
+
+    const expireDate = new Date(
+      approval.submitted_at.getTime() + 5 * 24 * 60 * 60 * 1000
+    );
+
+    if (expireDate <= new Date()) {
+      await Approve.deleteOne({ _id: approval._id });
+      await Submit.deleteOne({ _id: submission._id });
+      await Task.deleteOne({ _id: taskId });
+    }
+  } catch (err) {
+    console.error('taskHelpers.deleteTaskIfApprovedExpired failed:', err);
+  }
+}
+
+
 module.exports = {
   updateTaskIfExpired,
   fetchTaskStatusByChildId,
   fetchTaskByChildId,
   fetchTaskByChildCode,
   fetchTaskByIdForChild,
+  deleteTaskIfApprovedExpired
 };

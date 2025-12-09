@@ -12,6 +12,11 @@ exports.register = async (req, res) => {
     if(!title || title.trim() === '') {
       title = 'parent';
     }
+      if (family_code !== undefined && family_code !== null) {
+    family_code = String(family_code).trim();
+  } else {
+    family_code = '';
+  }
 
     if (!name || !email || !password ) {
       return res.status(400).json({ message: 'phone number,name, email, password are required' });
@@ -24,7 +29,7 @@ exports.register = async (req, res) => {
     }
 
     
-    if (String(family_code) === 'undefined' || !family_code || family_code.trim() === '') {
+    if (String(family_code) === 'undefined' || !family_code || family_code.trim() === '' ) {
       family_code = await checkFamilyCode.generateUniqueFamilyCode();
     }
     let family = await checkFamilyCode.checkFamilyCode(family_code);

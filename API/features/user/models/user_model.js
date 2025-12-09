@@ -18,10 +18,10 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
 
-    created_at: {
-      type: Date,
-      default: Date.now().toLocaleString('en-US', { timeZone: 'Africa/Cairo' }),
-    },
+      created_at: {
+        type: Date,
+        default: Date.now
+      },
   },
   { versionKey: false }
 );
