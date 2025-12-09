@@ -106,6 +106,8 @@ async function fetchTaskByChildId(childId) {
   const mapped = [];
   for (const t of tasks) {
     const finalStatus = await updateTaskIfExpired(t);
+    await deleteTaskIfApprovedExpired(t._id);
+    await deleteTaskIfstatusExpired(t._id);
      if(t.status == "completed" || t.status == "Declined")
       continue
 
@@ -149,6 +151,10 @@ async function fetchTaskByChildCode(childcode, familyId) {
   const mapped = [];
   for (const t of tasks) {
     const finalStatus = await updateTaskIfExpired(t);
+
+    await deleteTaskIfApprovedExpired(t._id);
+    await deleteTaskIfstatusExpired(t._id);
+
        if(t.status == "completed" || t.status == "Declined")
       continue
 
@@ -225,22 +231,17 @@ async function deleteTaskIfApprovedExpired(taskId) {
 
   async function deleteTaskIfstatusExpired(taskId) {
   try {
-
-    const submission = await submittedTaskModel.findOne({ task_id: taskId });
-    if (!submission) return; 
-
-
-    const approval = await approveModel.findOne({ task_submission_id: submission._id });
-    if (!approval || !approval.submitted_at) return;
+    const task = await taskModel.findById(taskId);
+    if (!task) return;
+    if (task.status !== 'expired') return;
 
     const expireDate = new Date(
-      approval.submitted_at.getTime() + 5 * 24 * 60 * 60 * 1000
+      task.expire_date.getTime() + 5 * 24 * 60 * 60 * 1000
     );
+    console.log("Expire Date:", expireDate);
 
     if (expireDate <= new Date()) {
-      await Approve.deleteOne({ _id: approval._id });
-      await Submit.deleteOne({ _id: submission._id });
-      await Task.deleteOne({ _id: taskId });
+      await taskModel.deleteOne({ _id: taskId });
     }
   } catch (err) {
     console.error('taskHelpers.deleteTaskIfApprovedExpired failed:', err);
@@ -254,5 +255,6 @@ module.exports = {
   fetchTaskByChildId,
   fetchTaskByChildCode,
   fetchTaskByIdForChild,
-  deleteTaskIfApprovedExpired
+  deleteTaskIfApprovedExpired,
+  deleteTaskIfstatusExpired
 };

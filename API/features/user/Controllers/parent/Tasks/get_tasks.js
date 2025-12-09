@@ -33,7 +33,7 @@ exports.get_tasks = async (req, res) => {
 
     const tasks = await fetchAlltasks(parentId);
 
-    if (!tasks) return res.status(404).json({ message: 'there is no tasks' , tasks: [] });
+    if (!tasks) return res.status(400).json({ message: 'there is no tasks' , tasks: [] });
     // if (Array.isArray(tasks) && tasks.length === 0 && tasks ==[]) {
     //   return res.status(200).json({ message: 'there is no tasks', tasks: [] });
     // }
@@ -65,13 +65,15 @@ async function fetchAlltasks(parentId) {
 
   const taskIds = tasks.map((u) => u._id);
   const taskss = await taskModel.find({ _id: { $in: taskIds } });
-  if (!taskss || taskss.length === 0) return [];
+  if (!taskss || taskss.length === 0) return res.status(400).json({ message: 'there is no tasks', tasks: [] });
 
   const mapped = [];
   for (const t of taskss) {
     const finalStatus = await taskHelpers.updateTaskIfExpired(t);
 
     const name = await childHelpers.getNameById(t.child_id);
+    await taskHelpers.deleteTaskIfstatusExpired(t._id);
+    await taskHelpers.deleteTaskIfApprovedExpired(t._id);
     
     if(t.status == "completed" || t.status == "Declined")
       continue
@@ -85,6 +87,8 @@ async function fetchAlltasks(parentId) {
       name: name,
     });
   }
+
+  if (mapped.length === 0) return null;
 
   return mapped;
 }
