@@ -108,8 +108,6 @@ async function fetchTaskByChildId(childId) {
     const finalStatus = await updateTaskIfExpired(t);
     await deleteTaskIfApprovedExpired(t._id);
     await deleteTaskIfstatusExpired(t._id);
-     if(t.status == "completed" || t.status == "Declined")
-      continue
 
     mapped.push({
       id: t._id,
