@@ -6,6 +6,7 @@ const isValidPhoneNumber = require('../../../../utils/phone_validation');
 const checkFamilyCode = require('../../../../utils/family_code');
 const permissionsModel = require('../../models/permissions_model');
 
+
 exports.register = async (req, res) => {
   try {
     let { name, email, password, phone_number, family_code, title } = req.body;
@@ -15,14 +16,12 @@ exports.register = async (req, res) => {
     }
 
     if (!name || !email || !password) {
-      return res.status(400).json({ message: 'phone number,name, email, password are required' });
+      return res
+        .status(400)
+        .json({ message: 'phone number,name, email, password are required' });
     }
 
-    if (family_code !== undefined && family_code !== null) {
-      family_code = String(family_code).trim();
-    } else {
-      family_code = '';
-    }
+    family_code = family_code ? String(family_code).trim() : '';
 
     if (phone_number && !isValidPhoneNumber.isValidPhone(phone_number)) {
       return res.status(400).json({ message: 'Invalid phone number format' });
@@ -34,12 +33,11 @@ exports.register = async (req, res) => {
       !family_code || family_code === 'undefined' || family_code.trim() === '';
 
     if (noFamilyCode) {
-
       family_code = await checkFamilyCode.generateUniqueFamilyCode();
+      console.log('From controller, family_code =', family_code);
 
       family = await familyModel.create({
-        family_code: family_code,
-        created_at: new Date(),
+        code: family_code
       });
     } else {
       family = await checkFamilyCode.checkFamilyCode(family_code);
@@ -79,10 +77,11 @@ exports.register = async (req, res) => {
 
     return res.status(201).json({
       message: 'Parent registered successfully',
-
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: error.message || 'Internal server error' });
+    return res
+      .status(500)
+      .json({ message: error.message || 'Internal server error' });
   }
 };

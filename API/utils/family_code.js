@@ -3,8 +3,10 @@ const familyModel = require('../features/user/models/family_model');
 async function generateUniqueFamilyCode(maxAttempts = 20) {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const exists = await familyModel.findOne({ code });
-    if (!exists) return code;
+    const exists = await familyModel.findOne({ code:code });
+    if (!exists)
+      console.log('Generated unique family code:', code);
+       return code;
   }
   return false;
 }

@@ -25,7 +25,7 @@ exports.getCurrent = async (req, res) => {
         message: 'User or family not found',
       });
     }
-
+    console.log(existingFamily.code);
     return res.status(200).json({
       email: existingParent.email,
       phone_number: existingParent.phone_number,
